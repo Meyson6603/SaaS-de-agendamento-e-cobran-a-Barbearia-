@@ -1,69 +1,107 @@
-import Image from "next/image";
+import Link from "next/link";
+import ServicePicker, { type Service } from "./_components/service-picker";
+
+const services: Service[] = [
+  {
+    id: "classic-cut",
+    name: "Corte clássico",
+    description: "Corte feito na tesoura ou máquina, do seu jeito.",
+    duration: 45,
+    price: 45,
+    category: "CABELO",
+  },
+  {
+    id: "beard",
+    name: "Barba",
+    description: "Modelagem com toalha quente e acabamento preciso.",
+    duration: 30,
+    price: 35,
+    category: "BARBA",
+  },
+  {
+    id: "cut-and-beard",
+    name: "Corte + barba",
+    description: "Um cuidado completo para renovar o visual.",
+    duration: 75,
+    price: 70,
+    category: "COMBO",
+  },
+  {
+    id: "eyebrow",
+    name: "Acabamento",
+    description: "Contorno e acabamento para deixar tudo em ordem.",
+    duration: 20,
+    price: 25,
+    category: "DETALHES",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="booking-page">
+      <header className="site-header">
+        <Link aria-label="Navalha, página inicial" className="brand" href="/">
+          <span aria-hidden="true" className="brand-mark">
+            N
+          </span>
+          <span>NAVALHA</span>
+        </Link>
+        <span className="header-caption">AGENDAMENTO ONLINE</span>
+      </header>
+
+      <div className="booking-content">
+        <section aria-labelledby="shop-name" className="shop-card">
+          <div className="shop-monogram" aria-hidden="true">
+            N.
+          </div>
+          <div className="shop-details">
+            <p className="eyebrow">SUA BARBEARIA DE CONFIANÇA</p>
+            <h1 id="shop-name">Navalha Barbearia</h1>
+            <p className="shop-address">Rua das Flores, 120 · São Paulo, SP</p>
+          </div>
+          <span className="open-status">
+            <span aria-hidden="true" className="status-dot" />
+            Aberto hoje
+          </span>
+        </section>
+
+        <section aria-labelledby="booking-title" className="booking-section">
+          <div className="booking-heading">
+            <div>
+              <p className="eyebrow">RESERVE SEU HORÁRIO</p>
+              <h2 id="booking-title">Escolha seu serviço</h2>
+              <p className="section-description">
+                Um bom corte começa com um bom momento.
+              </p>
+            </div>
+            <span className="step-count">01 <span>/ 03</span></span>
+          </div>
+
+          <div aria-label="Etapas do agendamento" className="stepper">
+            <div aria-current="step" className="step step-active">
+              <span className="step-number">01</span>
+              <span>Serviço</span>
+            </div>
+            <span aria-hidden="true" className="step-line" />
+            <div className="step">
+              <span className="step-number">02</span>
+              <span>Horário</span>
+            </div>
+            <span aria-hidden="true" className="step-line" />
+            <div className="step">
+              <span className="step-number">03</span>
+              <span>Seus dados</span>
+            </div>
+          </div>
+
+          <ServicePicker services={services} />
+        </section>
+
+        <footer className="page-footer">
+          <span>Feito para cuidar bem do seu tempo.</span>
+          <span>Seus dados são usados apenas para o agendamento.</span>
+        </footer>
+      </div>
+    </main>
   );
 }

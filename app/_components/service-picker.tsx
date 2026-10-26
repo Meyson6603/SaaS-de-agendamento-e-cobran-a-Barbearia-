@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import CustomerDetailsForm, {
+  type CustomerDetails,
+} from "./customer-details-form";
 
 export type Service = {
   id: string;
@@ -28,6 +31,16 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
+
+function getGreetingName(fullName: string): string {
+  const names = fullName.trim().split(/\s+/).filter(Boolean);
+
+  if (names.length < 2) {
+    return names[0] ?? "";
+  }
+
+  return [names[0], names[names.length - 1]].join(" ");
+}
 
 function getAvailableDates(): AvailableDate[] {
   const dates: AvailableDate[] = [];
@@ -69,9 +82,17 @@ export default function ServicePicker({ services }: ServicePickerProps) {
   );
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [customerDetails, setCustomerDetails] =
+    useState<CustomerDetails | null>(null);
   const selectedService = services.find(
     (service) => service.id === selectedServiceId,
   );
+  const greetingName = customerDetails
+    ? getGreetingName(customerDetails.name)
+    : "";
+  const hasSelectedSchedule = Boolean(selectedDate && selectedTime);
+  const isBookingComplete = Boolean(customerDetails && hasSelectedSchedule);
+  const currentStep = hasSelectedSchedule ? 3 : selectedService ? 2 : 1;
 
   return (
     <>
@@ -79,22 +100,32 @@ export default function ServicePicker({ services }: ServicePickerProps) {
         <div>
           <p className="eyebrow">RESERVE SEU HORÁRIO</p>
           <h2 id="booking-title">
-            {selectedService ? "Escolha data e horário" : "Escolha seu serviço"}
+            {isBookingComplete
+              ? "Agendamento confirmado"
+              : hasSelectedSchedule
+                ? "Informe seus dados"
+                : selectedService
+                  ? "Escolha data e horário"
+                  : "Escolha seu serviço"}
           </h2>
           <p className="section-description">
-            {selectedService
-              ? "Selecione um dia e depois um horário disponível."
-              : "Um bom corte começa com um bom momento."}
+            {isBookingComplete
+              ? "Sua solicitação de demonstração foi concluída."
+              : hasSelectedSchedule
+                ? "Preencha seus dados para revisar o agendamento."
+                : selectedService
+                  ? "Selecione um dia e depois um horário disponível."
+                  : "Um bom corte começa com um bom momento."}
           </p>
         </div>
         <span className="step-count">
-          {selectedService ? "02" : "01"} <span>/ 03</span>
+          {String(currentStep).padStart(2, "0")} <span>/ 03</span>
         </span>
       </div>
 
       <div aria-label="Etapas do agendamento" className="stepper">
         <div
-          aria-current={selectedService ? undefined : "step"}
+          aria-current={currentStep === 1 ? "step" : undefined}
           className={`step${selectedService ? " step-complete" : " step-active"}`}
         >
           <span className="step-number">{selectedService ? "✓" : "01"}</span>
@@ -102,15 +133,18 @@ export default function ServicePicker({ services }: ServicePickerProps) {
         </div>
         <span aria-hidden="true" className="step-line" />
         <div
-          aria-current={selectedService ? "step" : undefined}
-          className={`step${selectedService ? " step-active" : ""}`}
+          aria-current={currentStep === 2 ? "step" : undefined}
+          className={`step${hasSelectedSchedule ? " step-complete" : selectedService ? " step-active" : ""}`}
         >
-          <span className="step-number">02</span>
+          <span className="step-number">{hasSelectedSchedule ? "✓" : "02"}</span>
           <span>Horário</span>
         </div>
         <span aria-hidden="true" className="step-line" />
-        <div className="step">
-          <span className="step-number">03</span>
+        <div
+          aria-current={currentStep === 3 ? "step" : undefined}
+          className={`step${isBookingComplete ? " step-complete" : hasSelectedSchedule ? " step-active" : ""}`}
+        >
+          <span className="step-number">{isBookingComplete ? "✓" : "03"}</span>
           <span>Seus dados</span>
         </div>
       </div>
@@ -128,6 +162,7 @@ export default function ServicePicker({ services }: ServicePickerProps) {
                 setSelectedServiceId(service.id);
                 setSelectedDate(null);
                 setSelectedTime(null);
+                setCustomerDetails(null);
               }}
               type="button"
             >
@@ -210,6 +245,7 @@ export default function ServicePicker({ services }: ServicePickerProps) {
                   onClick={() => {
                     setSelectedDate(date.value);
                     setSelectedTime(null);
+                    setCustomerDetails(null);
                   }}
                   type="button"
                 >
@@ -243,8 +279,8 @@ export default function ServicePicker({ services }: ServicePickerProps) {
             </div>
           )}
 
-          {selectedDate && selectedTime && (
-            <div aria-live="polite" className="schedule-confirmation">
+          {selectedDate && selectedTime && !customerDetails && (
+            <div className="schedule-confirmation">
               <span>
                 Horário selecionado:{" "}
                 <strong>
@@ -257,7 +293,7 @@ export default function ServicePicker({ services }: ServicePickerProps) {
                 </strong>
               </span>
               <span className="summary-next">
-                A próxima etapa será informar seus dados.
+                Confira o horário e preencha seus dados abaixo.
               </span>
             </div>
           )}
@@ -265,6 +301,37 @@ export default function ServicePicker({ services }: ServicePickerProps) {
           <p className="schedule-disclaimer">
             Datas e horários de demonstração; ainda não representam a
             disponibilidade real da barbearia.
+          </p>
+        </section>
+      )}
+
+      {selectedService && selectedDate && selectedTime && !customerDetails && (
+        <CustomerDetailsForm
+          date={selectedDate}
+          onSubmit={setCustomerDetails}
+          serviceName={selectedService.name}
+          time={selectedTime}
+        />
+      )}
+
+      {customerDetails && selectedService && selectedDate && selectedTime && (
+        <section
+          aria-live="polite"
+          aria-labelledby="booking-complete-heading"
+          className="customer-section booking-complete"
+        >
+          <span aria-hidden="true" className="summary-check">
+            ✓
+          </span>
+          <h3 id="booking-complete-heading">
+            Obrigado{greetingName ? `, ${greetingName}` : ""}!
+          </h3>
+          <p>
+            A demonstração do agendamento para{" "}
+            <strong>{selectedService.name}</strong> foi concluída.
+          </p>
+          <p className="schedule-disclaimer">
+            Nenhum agendamento ou dado foi enviado ou salvo.
           </p>
         </section>
       )}

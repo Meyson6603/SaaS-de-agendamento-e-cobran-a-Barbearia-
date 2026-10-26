@@ -1,0 +1,109 @@
+# SaaS de agendamento e cobrança
+
+Aplicação web para ajudar barbearias a organizar serviços, horários, agendamentos e pagamentos em um só lugar.
+
+O produto será desenvolvido inicialmente para o mercado brasileiro (BRL), com foco em uma experiência confiável tanto para quem administra a barbearia quanto para quem agenda um atendimento.
+
+## Problema
+
+Barbearias precisam conciliar agenda, informações de serviços, clientes e pagamentos. O objetivo deste projeto é reduzir o trabalho manual e oferecer um processo de agendamento claro, do horário disponível até o registro do pagamento.
+
+## Público inicial
+
+- **Barbearias e profissionais:** cadastram serviços, organizam a agenda e acompanham agendamentos e pagamentos.
+- **Clientes:** consultam serviços e horários disponíveis e solicitam um agendamento.
+
+## Escopo do MVP
+
+A primeira versão deve validar o fluxo principal de agendamento:
+
+- cadastro da barbearia, profissionais e serviços;
+- configuração de horários e disponibilidade;
+- página pública para clientes consultarem serviços e horários;
+- criação, confirmação, cancelamento e acompanhamento de agendamentos;
+- registro do método e status de pagamento;
+- experiência responsiva para celular e desktop.
+
+Os pagamentos online serão integrados depois que as regras de agendamento estiverem definidas. O MVP não deve armazenar dados de cartão: os dados de pagamento devem ser tratados pelo provedor escolhido.
+
+## Pagamentos
+
+Existem dois fluxos financeiros independentes:
+
+### Assinatura do SaaS
+
+A barbearia paga uma assinatura recorrente para usar a plataforma. Essa cobrança é recebida pela empresa responsável pelo SaaS.
+
+### Pagamento dos serviços da barbearia
+
+O cliente poderá pagar online ou presencialmente. A plataforma não cobrará comissão sobre o valor do serviço. Isso não elimina eventuais tarifas cobradas pelo provedor de pagamento ou pela adquirente da barbearia.
+
+Métodos previstos:
+
+- **Online:** Pix e cartão de crédito; cartão de débito poderá ser habilitado se o provedor e o fluxo escolhido oferecerem suporte adequado.
+- **Presencial:** dinheiro ou cartão na maquininha da barbearia. O sistema registra o método e o status, mas não processa o cartão presencial no MVP.
+
+**Provedor inicial a avaliar: Mercado Pago.** É a primeira opção a validar para os pagamentos brasileiros, considerando Pix e cartões. Antes de implementar, confirmar os requisitos atuais para pagamentos de terceiros, conexão da conta de cada barbearia, repasses, tarifas, reembolsos, webhooks e cobrança recorrente da assinatura. Se um único provedor não atender bem aos dois fluxos, a cobrança da assinatura e os pagamentos dos serviços poderão usar provedores diferentes.
+
+Para pagamentos online dos serviços, a direção preferida é que o dinheiro seja recebido diretamente na conta conectada da barbearia, sem retenção pela plataforma e sem comissão do SaaS. Essa possibilidade e suas condições precisam ser confirmadas com o provedor antes de virar uma decisão técnica definitiva.
+
+## Cancelamentos e reembolsos
+
+As regras de agendamento, cancelamento e reembolso devem respeitar a legislação de defesa do consumidor aplicável no Brasil, incluindo o Código de Defesa do Consumidor. Antes do lançamento, os termos e os prazos deverão passar por revisão jurídica. O sistema deve deixar as regras visíveis ao cliente e registrar alterações e eventos relevantes do agendamento.
+
+## Planos propostos
+
+Valores e limites abaixo são hipóteses iniciais para discussão e validação com barbearias; não são preços finais.
+
+| Plano | Preço sugerido | Para quem | Escopo inicial |
+| --- | --- | --- | --- |
+| **Solo** | R$ 39/mês | Profissional autônomo | 1 profissional, agenda, serviços, página pública e registro de pagamentos |
+| **Barbearia** | R$ 89/mês | Barbearia pequena | Até 5 profissionais, gestão de equipe, agenda compartilhada e relatórios básicos |
+| **Equipe** | R$ 159/mês | Barbearia em crescimento | Até 15 profissionais, permissões por perfil e relatórios avançados |
+
+Os planos não incluem comissão sobre os serviços. Tarifas do provedor de pagamento, quando houver, são separadas da assinatura. Os limites, preços, período de teste e recursos de cada plano devem ser validados antes de implementar a cobrança recorrente.
+
+## Tecnologias
+
+- [Next.js](https://nextjs.org/)
+- [React](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+
+## Começando
+
+### Pré-requisitos
+
+- Node.js compatível com a versão do Next.js usada pelo projeto;
+- npm.
+
+### Instalação e execução
+
+```bash
+npm install
+npm run dev
+```
+
+Abra [http://localhost:3000](http://localhost:3000) no navegador.
+
+### Comandos disponíveis
+
+```bash
+npm run dev    # inicia o servidor de desenvolvimento
+npm run lint   # verifica problemas de lint
+npm run build  # gera a versão de produção
+npm run start  # inicia a versão de produção
+```
+
+## Princípios do projeto
+
+- Separar a cobrança da assinatura do SaaS dos pagamentos dos serviços.
+- Não armazenar dados de cartão; usar páginas ou componentes seguros do provedor.
+- Validar pagamentos por notificações assinadas do provedor, sem confiar apenas no retorno do navegador.
+- Projetar o processamento de notificações para lidar com reenvios sem duplicar efeitos.
+- Manter claras para a barbearia e para o cliente as regras, os valores e o status de cada pagamento.
+- Implementar funcionalidades em etapas pequenas, com validação, testes e histórico de alterações no Git.
+
+## Status
+
+Projeto em fase inicial. O repositório contém a estrutura criada pelo Next.js; as funcionalidades de produto ainda serão implementadas.

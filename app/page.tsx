@@ -66,34 +66,6 @@ export default function Home() {
         </section>
 
         <section aria-labelledby="booking-title" className="booking-section">
-          <div className="booking-heading">
-            <div>
-              <p className="eyebrow">RESERVE SEU HORÁRIO</p>
-              <h2 id="booking-title">Escolha seu serviço</h2>
-              <p className="section-description">
-                Um bom corte começa com um bom momento.
-              </p>
-            </div>
-            <span className="step-count">01 <span>/ 03</span></span>
-          </div>
-
-          <div aria-label="Etapas do agendamento" className="stepper">
-            <div aria-current="step" className="step step-active">
-              <span className="step-number">01</span>
-              <span>Serviço</span>
-            </div>
-            <span aria-hidden="true" className="step-line" />
-            <div className="step">
-              <span className="step-number">02</span>
-              <span>Horário</span>
-            </div>
-            <span aria-hidden="true" className="step-line" />
-            <div className="step">
-              <span className="step-number">03</span>
-              <span>Seus dados</span>
-            </div>
-          </div>
-
           <ServicePicker services={services} />
         </section>
 

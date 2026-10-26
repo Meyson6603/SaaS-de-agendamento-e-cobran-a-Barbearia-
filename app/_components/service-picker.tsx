@@ -101,7 +101,7 @@ export default function ServicePicker({ services }: ServicePickerProps) {
           <p className="eyebrow">RESERVE SEU HORÁRIO</p>
           <h2 id="booking-title">
             {isBookingComplete
-              ? "Agendamento confirmado"
+              ? "Demonstração concluída"
               : hasSelectedSchedule
                 ? "Informe seus dados"
                 : selectedService
@@ -110,7 +110,7 @@ export default function ServicePicker({ services }: ServicePickerProps) {
           </h2>
           <p className="section-description">
             {isBookingComplete
-              ? "Sua solicitação de demonstração foi concluída."
+              ? "Nenhum horário foi reservado e seus dados não foram enviados."
               : hasSelectedSchedule
                 ? "Preencha seus dados para revisar o agendamento."
                 : selectedService
@@ -149,169 +149,175 @@ export default function ServicePicker({ services }: ServicePickerProps) {
         </div>
       </div>
 
-      <div aria-label="Serviços disponíveis" className="service-grid">
-        {services.map((service) => {
-          const isSelected = selectedServiceId === service.id;
-
-          return (
-            <button
-              aria-pressed={isSelected}
-              className={`service-card${isSelected ? " service-card-selected" : ""}`}
-              key={service.id}
-              onClick={() => {
-                setSelectedServiceId(service.id);
-                setSelectedDate(null);
-                setSelectedTime(null);
-                setCustomerDetails(null);
-              }}
-              type="button"
-            >
-              <span className="service-card-top">
-                <span className="service-category">{service.category}</span>
-                <span aria-hidden="true" className="selection-indicator">
-                  {isSelected ? "✓" : ""}
-                </span>
-              </span>
-              <span className="service-name">{service.name}</span>
-              <span className="service-description">{service.description}</span>
-              <span className="service-card-bottom">
-                <span className="service-duration">
-                  <svg
-                    aria-hidden="true"
-                    fill="none"
-                    height="15"
-                    viewBox="0 0 16 16"
-                    width="15"
-                  >
-                    <circle cx="8" cy="8" r="6" />
-                    <path d="M8 4.5V8l2.25 1.5" />
-                  </svg>
-                  {service.duration} min
-                </span>
-                <span className="service-price">
-                  {currencyFormatter.format(service.price)}
-                </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div aria-live="polite" className="selection-summary">
-        {selectedService ? (
-          <>
-            <div className="summary-copy">
-              <span className="summary-label">SERVIÇO SELECIONADO</span>
-              <span className="summary-service">
-                {selectedService.name}
-                <span aria-hidden="true"> · </span>
-                {currencyFormatter.format(selectedService.price)}
-              </span>
-              <span className="summary-next">
-                Escolha uma data e um horário para continuar.
-              </span>
-            </div>
-            <span aria-hidden="true" className="summary-check">
-              ✓
-            </span>
-          </>
-        ) : (
-          <p className="selection-hint">
-            Selecione um serviço para começar seu agendamento.
-          </p>
-        )}
-      </div>
-
-      {selectedService && (
-        <section aria-labelledby="date-heading" className="schedule-section">
-          <div className="schedule-heading">
-            <div>
-              <p className="eyebrow">AGENDA DA BARBEARIA</p>
-              <h3 id="date-heading">Qual dia funciona para você?</h3>
-            </div>
-            <span className="schedule-timezone">Horário de Brasília</span>
-          </div>
-
-          <div aria-label="Datas disponíveis" className="date-grid">
-            {getAvailableDates().map((date) => {
-              const isSelected = selectedDate === date.value;
+      {!isBookingComplete && (
+        <>
+          <div aria-label="Serviços disponíveis" className="service-grid">
+            {services.map((service) => {
+              const isSelected = selectedServiceId === service.id;
 
               return (
                 <button
                   aria-pressed={isSelected}
-                  aria-label={date.accessibleLabel}
-                  className={`date-option${isSelected ? " date-option-selected" : ""}`}
-                  key={date.value}
+                  className={`service-card${isSelected ? " service-card-selected" : ""}`}
+                  key={service.id}
                   onClick={() => {
-                    setSelectedDate(date.value);
+                    setSelectedServiceId(service.id);
+                    setSelectedDate(null);
                     setSelectedTime(null);
                     setCustomerDetails(null);
                   }}
                   type="button"
                 >
-                  <span>{date.weekday}</span>
-                  <strong>{date.day}</strong>
+                  <span className="service-card-top">
+                    <span className="service-category">{service.category}</span>
+                    <span aria-hidden="true" className="selection-indicator">
+                      {isSelected ? "✓" : ""}
+                    </span>
+                  </span>
+                  <span className="service-name">{service.name}</span>
+                  <span className="service-description">
+                    {service.description}
+                  </span>
+                  <span className="service-card-bottom">
+                    <span className="service-duration">
+                      <svg
+                        aria-hidden="true"
+                        fill="none"
+                        height="15"
+                        viewBox="0 0 16 16"
+                        width="15"
+                      >
+                        <circle cx="8" cy="8" r="6" />
+                        <path d="M8 4.5V8l2.25 1.5" />
+                      </svg>
+                      {service.duration} min
+                    </span>
+                    <span className="service-price">
+                      {currencyFormatter.format(service.price)}
+                    </span>
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {selectedDate && (
-            <div aria-labelledby="time-heading" className="time-section">
-              <h3 id="time-heading">Horários disponíveis</h3>
-              <div aria-label="Horários disponíveis" className="time-grid">
-                {availableTimes.map((time) => {
-                  const isSelected = selectedTime === time;
+          <div aria-live="polite" className="selection-summary">
+            {selectedService ? (
+              <>
+                <div className="summary-copy">
+                  <span className="summary-label">SERVIÇO SELECIONADO</span>
+                  <span className="summary-service">
+                    {selectedService.name}
+                    <span aria-hidden="true"> · </span>
+                    {currencyFormatter.format(selectedService.price)}
+                  </span>
+                  <span className="summary-next">
+                    Escolha uma data e um horário para continuar.
+                  </span>
+                </div>
+                <span aria-hidden="true" className="summary-check">
+                  ✓
+                </span>
+              </>
+            ) : (
+              <p className="selection-hint">
+                Selecione um serviço para começar seu agendamento.
+              </p>
+            )}
+          </div>
+
+          {selectedService && (
+            <section aria-labelledby="date-heading" className="schedule-section">
+              <div className="schedule-heading">
+                <div>
+                  <p className="eyebrow">AGENDA DA BARBEARIA</p>
+                  <h3 id="date-heading">Qual dia funciona para você?</h3>
+                </div>
+                <span className="schedule-timezone">Horário de Brasília</span>
+              </div>
+
+              <div aria-label="Datas disponíveis" className="date-grid">
+                {getAvailableDates().map((date) => {
+                  const isSelected = selectedDate === date.value;
 
                   return (
                     <button
                       aria-pressed={isSelected}
-                      className={`time-option${isSelected ? " time-option-selected" : ""}`}
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
+                      aria-label={date.accessibleLabel}
+                      className={`date-option${isSelected ? " date-option-selected" : ""}`}
+                      key={date.value}
+                      onClick={() => {
+                        setSelectedDate(date.value);
+                        setSelectedTime(null);
+                        setCustomerDetails(null);
+                      }}
                       type="button"
                     >
-                      {time}
+                      <span>{date.weekday}</span>
+                      <strong>{date.day}</strong>
                     </button>
                   );
                 })}
               </div>
-            </div>
+
+              {selectedDate && (
+                <div aria-labelledby="time-heading" className="time-section">
+                  <h3 id="time-heading">Horários disponíveis</h3>
+                  <div aria-label="Horários disponíveis" className="time-grid">
+                    {availableTimes.map((time) => {
+                      const isSelected = selectedTime === time;
+
+                      return (
+                        <button
+                          aria-pressed={isSelected}
+                          className={`time-option${isSelected ? " time-option-selected" : ""}`}
+                          key={time}
+                          onClick={() => setSelectedTime(time)}
+                          type="button"
+                        >
+                          {time}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {selectedDate && selectedTime && !customerDetails && (
+                <div className="schedule-confirmation">
+                  <span>
+                    Horário selecionado:{" "}
+                    <strong>
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        dateStyle: "long",
+                        timeZone: "UTC",
+                      }).format(new Date(`${selectedDate}T12:00:00Z`))}
+                      {" às "}
+                      {selectedTime}
+                    </strong>
+                  </span>
+                  <span className="summary-next">
+                    Confira o horário e preencha seus dados abaixo.
+                  </span>
+                </div>
+              )}
+
+              <p className="schedule-disclaimer">
+                Datas e horários de demonstração; ainda não representam a
+                disponibilidade real da barbearia.
+              </p>
+            </section>
           )}
 
-          {selectedDate && selectedTime && !customerDetails && (
-            <div className="schedule-confirmation">
-              <span>
-                Horário selecionado:{" "}
-                <strong>
-                  {new Intl.DateTimeFormat("pt-BR", {
-                    dateStyle: "long",
-                    timeZone: "UTC",
-                  }).format(new Date(`${selectedDate}T12:00:00Z`))}
-                  {" às "}
-                  {selectedTime}
-                </strong>
-              </span>
-              <span className="summary-next">
-                Confira o horário e preencha seus dados abaixo.
-              </span>
-            </div>
+          {selectedService && selectedDate && selectedTime && (
+            <CustomerDetailsForm
+              date={selectedDate}
+              onSubmit={setCustomerDetails}
+              serviceName={selectedService.name}
+              time={selectedTime}
+            />
           )}
-
-          <p className="schedule-disclaimer">
-            Datas e horários de demonstração; ainda não representam a
-            disponibilidade real da barbearia.
-          </p>
-        </section>
-      )}
-
-      {selectedService && selectedDate && selectedTime && !customerDetails && (
-        <CustomerDetailsForm
-          date={selectedDate}
-          onSubmit={setCustomerDetails}
-          serviceName={selectedService.name}
-          time={selectedTime}
-        />
+        </>
       )}
 
       {customerDetails && selectedService && selectedDate && selectedTime && (
@@ -320,19 +326,51 @@ export default function ServicePicker({ services }: ServicePickerProps) {
           aria-labelledby="booking-complete-heading"
           className="customer-section booking-complete"
         >
-          <span aria-hidden="true" className="summary-check">
+          <span aria-hidden="true" className="booking-complete-icon">
             ✓
           </span>
+          <p className="eyebrow">FLUXO DE DEMONSTRAÇÃO</p>
           <h3 id="booking-complete-heading">
             Obrigado{greetingName ? `, ${greetingName}` : ""}!
           </h3>
-          <p>
-            A demonstração do agendamento para{" "}
-            <strong>{selectedService.name}</strong> foi concluída.
+          <p className="booking-complete-message">
+            Esta tela é apenas uma demonstração. O agendamento não foi
+            confirmado.
           </p>
-          <p className="schedule-disclaimer">
-            Nenhum agendamento ou dado foi enviado ou salvo.
+          <dl className="booking-complete-details">
+            <div>
+              <dt>Serviço</dt>
+              <dd>{selectedService.name}</dd>
+            </div>
+            <div>
+              <dt>Data</dt>
+              <dd>
+                {new Intl.DateTimeFormat("pt-BR", {
+                  dateStyle: "long",
+                  timeZone: "UTC",
+                }).format(new Date(`${selectedDate}T12:00:00Z`))}
+              </dd>
+            </div>
+            <div>
+              <dt>Horário</dt>
+              <dd>{selectedTime}</dd>
+            </div>
+          </dl>
+          <p className="booking-complete-notice">
+            Nenhum dado foi enviado ou salvo.
           </p>
+          <button
+            className="booking-restart"
+            onClick={() => {
+              setCustomerDetails(null);
+              setSelectedServiceId(null);
+              setSelectedDate(null);
+              setSelectedTime(null);
+            }}
+            type="button"
+          >
+            Começar outro agendamento
+          </button>
         </section>
       )}
     </>

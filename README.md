@@ -35,7 +35,8 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - O login com Google é a primeira opção planejada para barbearias e clientes; outros provedores poderão ser avaliados depois.
 - No fluxo do cliente, o login será solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
-- Essas regras estão definidas para o produto, mas autenticação, contas e persistência ainda não foram implementadas.
+- O fluxo demonstrativo exige login antes de exibir a etapa final, mas ainda não cria nem salva agendamentos.
+- A proteção definitiva da confirmação deverá validar a sessão no servidor junto com a gravação do agendamento.
 
 ## Fluxo administrativo do MVP
 
@@ -154,6 +155,15 @@ npm run db:migrate
 
 O esquema inicial fica em `prisma/schema.prisma`. `npm run db:migrate` precisa de uma instância Neon acessível e de uma `DIRECT_URL` válida.
 
+### Login com Google
+
+1. Gere um segredo local com `npx auth secret` e salve o valor como `BETTER_AUTH_SECRET` no `.env`.
+2. Crie credenciais OAuth no Google Cloud Console e configure `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` no `.env`.
+3. Configure como URI de redirecionamento autorizada `http://localhost:3000/api/auth/callback/google`.
+4. Mantenha `BETTER_AUTH_URL=http://localhost:3000` no desenvolvimento. Em produção, use o domínio HTTPS publicado e cadastre a URI de retorno correspondente no Google.
+
+O arquivo `.env.example` lista todas as variáveis esperadas. Nunca compartilhe nem versione segredos ou credenciais OAuth.
+
 ### Comandos disponíveis
 
 ```bash
@@ -161,8 +171,9 @@ npm run dev    # inicia o servidor de desenvolvimento
 npm run lint   # verifica problemas de lint
 npm run build  # gera a versão de produção
 npm run start  # inicia a versão de produção
-npm run db:validate # valida o esquema Prisma
-npm run db:studio   # abre a interface local do Prisma Studio
+npm run db:validate  # valida o esquema Prisma
+npm run db:studio    # abre a interface local do Prisma Studio
+npx auth secret      # gera um segredo para configurar em BETTER_AUTH_SECRET
 ```
 
 ## Princípios do projeto
@@ -176,8 +187,8 @@ npm run db:studio   # abre a interface local do Prisma Studio
 
 ## Status
 
-O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário, formulário de dados do cliente e tela de conclusão. Essa demonstração não cria nem salva agendamentos.
+O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário. O formulário e a tela de conclusão só aparecem para usuários autenticados; a demonstração não cria nem salva agendamentos.
 
-Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos, além da migração inicial. O esquema e o cliente gerado foram validados, mas ainda não foram conectados a uma instância PostgreSQL nem usados pela aplicação.
+Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O login com Google e a proteção inicial de `/dashboard` estão implementados com Better Auth, mas precisam das credenciais OAuth do Google configuradas para funcionar.
 
-Ainda precisam ser implementados: autenticação e autorização, painel administrativo, operações reais de leitura e gravação, disponibilidade em tempo real, proteção contra reservas concorrentes e integrações de pagamento. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.
+Ainda precisam ser implementados: autorização por papel e barbearia, onboarding, painel administrativo, operações reais de leitura e gravação, disponibilidade em tempo real, proteção contra reservas concorrentes e integrações de pagamento. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.

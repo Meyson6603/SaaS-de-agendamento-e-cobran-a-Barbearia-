@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import CustomerDetailsForm, {
   type CustomerDetails,
 } from "./customer-details-form";
@@ -22,6 +23,7 @@ type AvailableDate = {
 };
 
 type ServicePickerProps = {
+  isAuthenticated: boolean;
   services: Service[];
 };
 
@@ -76,7 +78,10 @@ function getAvailableDates(): AvailableDate[] {
   return dates;
 }
 
-export default function ServicePicker({ services }: ServicePickerProps) {
+export default function ServicePicker({
+  isAuthenticated,
+  services,
+}: ServicePickerProps) {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     null,
   );
@@ -310,12 +315,31 @@ export default function ServicePicker({ services }: ServicePickerProps) {
           )}
 
           {selectedService && selectedDate && selectedTime && (
-            <CustomerDetailsForm
-              date={selectedDate}
-              onSubmit={setCustomerDetails}
-              serviceName={selectedService.name}
-              time={selectedTime}
-            />
+            isAuthenticated ? (
+              <CustomerDetailsForm
+                date={selectedDate}
+                onSubmit={setCustomerDetails}
+                serviceName={selectedService.name}
+                time={selectedTime}
+              />
+            ) : (
+              <section
+                aria-labelledby="booking-login-heading"
+                className="customer-section booking-login-required"
+              >
+                <p className="eyebrow">ENTRE NA SUA CONTA</p>
+                <h3 id="booking-login-heading">
+                  Faça login para continuar
+                </h3>
+                <p>
+                  É necessário entrar na sua conta antes de confirmar um
+                  agendamento. Nenhum horário será confirmado sem login.
+                </p>
+                <Link className="booking-login-link" href="/login">
+                  Entrar
+                </Link>
+              </section>
+            )
           )}
         </>
       )}

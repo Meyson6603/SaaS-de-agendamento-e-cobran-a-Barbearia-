@@ -120,6 +120,7 @@ Os planos não incluem comissão sobre os serviços. Tarifas do provedor de paga
 - [React](https://react.dev/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
+- [PostgreSQL](https://www.postgresql.org/) e [Prisma ORM](https://www.prisma.io/)
 
 ## Começando
 
@@ -137,6 +138,22 @@ npm run dev
 
 Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
+### Banco de dados
+
+O projeto usa PostgreSQL hospedado no Neon com Prisma. Para configurar o banco:
+
+1. Crie um projeto PostgreSQL no Neon.
+2. Copie `.env.example` para `.env` e configure `DATABASE_URL` com a conexão pooled do Neon e `DIRECT_URL` com a conexão direta. A aplicação usa `DATABASE_URL`; migrações usam `DIRECT_URL`.
+3. Nunca compartilhe nem versione o arquivo `.env`.
+4. Gere o cliente e aplique as migrações:
+
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+O esquema inicial fica em `prisma/schema.prisma`. `npm run db:migrate` precisa de uma instância Neon acessível e de uma `DIRECT_URL` válida.
+
 ### Comandos disponíveis
 
 ```bash
@@ -144,6 +161,8 @@ npm run dev    # inicia o servidor de desenvolvimento
 npm run lint   # verifica problemas de lint
 npm run build  # gera a versão de produção
 npm run start  # inicia a versão de produção
+npm run db:validate # valida o esquema Prisma
+npm run db:studio   # abre a interface local do Prisma Studio
 ```
 
 ## Princípios do projeto
@@ -159,4 +178,6 @@ npm run start  # inicia a versão de produção
 
 O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário, formulário de dados do cliente e tela de conclusão. Essa demonstração não cria nem salva agendamentos.
 
-Ainda precisam ser implementados: autenticação e contas, painel administrativo, banco de dados, disponibilidade real, persistência de agendamentos e integrações de pagamento. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.
+Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos, além da migração inicial. O esquema e o cliente gerado foram validados, mas ainda não foram conectados a uma instância PostgreSQL nem usados pela aplicação.
+
+Ainda precisam ser implementados: autenticação e autorização, painel administrativo, operações reais de leitura e gravação, disponibilidade em tempo real, proteção contra reservas concorrentes e integrações de pagamento. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.

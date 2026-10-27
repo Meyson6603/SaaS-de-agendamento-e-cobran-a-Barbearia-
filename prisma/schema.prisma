@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MembershipRole {
+  OWNER
+  MANAGER
+  PROFESSIONAL
+}
+
+enum Weekday {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+enum AvailabilityExceptionType {
+  AVAILABLE
+  BLOCKED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentMethod {
+  PIX
+  CASH
+  CARD_ON_SITE
+  ONLINE_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  bookings    Booking[]    @relation("BookingCustomer")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Barbershop {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  phone     String?
+  timezone  String   @default("America/Sao_Paulo")
+  currency  String   @default("BRL")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships            Membership[]
+  professionals          Professional[]
+  services               Service[]
+  availabilityExceptions AvailabilityException[]
+  bookings               Booking[]
+}
+
+model Membership {
+  id        String         @id @default(cuid())
+  shopId    String
+  userId    String
+  role      MembershipRole
+  createdAt DateTime       @default(now())
+
+  shop         Barbershop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professional Professional?
+
+  @@unique([shopId, userId])
+  @@unique([shopId, id])
+  @@index([userId])
+}
+
+model Professional {
+  id           String   @id @default(cuid())
+  shopId       String
+  membershipId String   @unique
+  displayName  String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shop                   Barbershop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  membership             Membership              @relation(fields: [shopId, membershipId], references: [shopId, id], onDelete: Cascade)
+  services               ProfessionalService[]
+  weeklyAvailability     WeeklyAvailability[]
+  availabilityExceptions AvailabilityException[]
+  bookings               Booking[]
+
+  @@unique([shopId, membershipId])
+  @@unique([shopId, id])
+  @@index([shopId, isActive])
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  shopId          String
+  name            String
+  description     String?
+  durationMinutes Int
+  price           Decimal  @db.Decimal(10, 2)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop          Barbershop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  professionals ProfessionalService[]
+  bookings      Booking[]
+
+  @@unique([shopId, id])
+  @@index([shopId, isActive])
+}
+
+model ProfessionalService {
+  shopId         String
+  professionalId String
+  serviceId      String
+
+  professional Professional @relation(fields: [shopId, professionalId], references: [shopId, id], onDelete: Cascade)
+  service      Service      @relation(fields: [shopId, serviceId], references: [shopId, id], onDelete: Cascade)
+
+  @@id([shopId, professionalId, serviceId])
+  @@index([shopId, serviceId])
+}
+
+model WeeklyAvailability {
+  id             String  @id @default(cuid())
+  shopId         String
+  professionalId String
+  weekday        Weekday
+  startMinute    Int
+  endMinute      Int
+
+  professional Professional @relation(fields: [shopId, professionalId], references: [shopId, id], onDelete: Cascade)
+
+  @@unique([professionalId, weekday, startMinute])
+  @@index([shopId, professionalId, weekday])
+}
+
+model AvailabilityException {
+  id             String                    @id @default(cuid())
+  shopId         String
+  professionalId String
+  type           AvailabilityExceptionType @default(BLOCKED)
+  startsAt       DateTime                  @db.Timestamptz(3)
+  endsAt         DateTime                  @db.Timestamptz(3)
+  reason         String?
+  createdAt      DateTime                  @default(now())
+
+  shop         Barbershop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  professional Professional @relation(fields: [shopId, professionalId], references: [shopId, id], onDelete: Cascade)
+
+  @@index([shopId, professionalId, startsAt, endsAt])
+}
+
+model Booking {
+  id                      String        @id @default(cuid())
+  shopId                  String
+  professionalId          String
+  serviceId               String
+  customerId              String
+  status                  BookingStatus @default(CONFIRMED)
+  startsAt                DateTime      @db.Timestamptz(3)
+  endsAt                  DateTime      @db.Timestamptz(3)
+  serviceNameSnapshot     String
+  serviceDurationSnapshot Int
+  servicePriceSnapshot    Decimal       @db.Decimal(10, 2)
+  customerNote            String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  shop         Barbershop   @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  professional Professional @relation(fields: [shopId, professionalId], references: [shopId, id], onDelete: Restrict)
+  service      Service      @relation(fields: [shopId, serviceId], references: [shopId, id], onDelete: Restrict)
+  customer     User         @relation("BookingCustomer", fields: [customerId], references: [id], onDelete: Restrict)
+  payment      Payment?
+
+  @@index([shopId, startsAt])
+  @@index([shopId, status, startsAt])
+  @@index([professionalId, startsAt, endsAt])
+  @@index([customerId, startsAt])
+}
+
+model Payment {
+  id        String         @id @default(cuid())
+  bookingId String         @unique
+  method    PaymentMethod?
+  status    PaymentStatus  @default(PENDING)
+  amount    Decimal        @db.Decimal(10, 2)
+  paidAt    DateTime?      @db.Timestamptz(3)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+}

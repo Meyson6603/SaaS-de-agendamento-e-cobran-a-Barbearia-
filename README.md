@@ -17,14 +17,23 @@ Barbearias precisam conciliar agenda, informações de serviços, clientes e pag
 
 A primeira versão deve validar o fluxo principal de agendamento:
 
+- criação da conta da barbearia e acesso ao painel administrativo;
 - cadastro da barbearia, profissionais e serviços;
 - configuração de horários e disponibilidade;
-- página pública para clientes consultarem serviços e horários;
+- página pública para clientes consultarem serviços e horários, com conta obrigatória para confirmar o agendamento;
 - criação, confirmação, cancelamento e acompanhamento de agendamentos;
 - registro do método e status de pagamento;
 - experiência responsiva para celular e desktop.
 
 Os pagamentos online serão integrados depois que as regras de agendamento estiverem definidas. O MVP não deve armazenar dados de cartão: os dados de pagamento devem ser tratados pelo provedor escolhido.
+
+## Contas e autenticação
+
+- A barbearia terá uma conta para acessar o painel e administrar sua operação.
+- O cliente precisará de uma conta para confirmar um agendamento e consultar seu histórico e próximos horários.
+- O login com Google é a primeira opção planejada para barbearias e clientes; outros provedores poderão ser avaliados depois.
+- No fluxo do cliente, o login será solicitado depois da escolha do serviço e do horário, antes da confirmação.
+- Essas regras estão definidas para o produto, mas autenticação, contas e persistência ainda não foram implementadas.
 
 ## Pagamentos
 
@@ -32,7 +41,7 @@ Existem dois fluxos financeiros independentes:
 
 ### Assinatura do SaaS
 
-A barbearia paga uma assinatura recorrente para usar a plataforma. Essa cobrança é recebida pela empresa responsável pelo SaaS.
+A barbearia paga uma assinatura recorrente para usar a plataforma. A decisão inicial é oferecer um período de teste gratuito antes de iniciar a cobrança. A duração do teste, a exigência e o momento de cadastro do cartão ainda precisam ser definidos. Essa cobrança é recebida pela empresa responsável pelo SaaS.
 
 ### Pagamento dos serviços da barbearia
 
@@ -61,7 +70,7 @@ Valores e limites abaixo são hipóteses iniciais para discussão e validação 
 | **Barbearia** | R$ 89/mês | Barbearia pequena | Até 5 profissionais, gestão de equipe, agenda compartilhada e relatórios básicos |
 | **Equipe** | R$ 159/mês | Barbearia em crescimento | Até 15 profissionais, permissões por perfil e relatórios avançados |
 
-Os planos não incluem comissão sobre os serviços. Tarifas do provedor de pagamento, quando houver, são separadas da assinatura. Os limites, preços, período de teste e recursos de cada plano devem ser validados antes de implementar a cobrança recorrente.
+Os planos não incluem comissão sobre os serviços. Tarifas do provedor de pagamento, quando houver, são separadas da assinatura. Os limites, preços, duração do período de teste e recursos de cada plano devem ser validados antes de implementar a cobrança recorrente.
 
 ## Tecnologias
 
@@ -106,4 +115,6 @@ npm run start  # inicia a versão de produção
 
 ## Status
 
-Projeto em fase inicial. O repositório contém a estrutura criada pelo Next.js; as funcionalidades de produto ainda serão implementadas.
+O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário, formulário de dados do cliente e tela de conclusão. Essa demonstração não cria nem salva agendamentos.
+
+Ainda precisam ser implementados: autenticação e contas, painel administrativo, banco de dados, disponibilidade real, persistência de agendamentos e integrações de pagamento. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.

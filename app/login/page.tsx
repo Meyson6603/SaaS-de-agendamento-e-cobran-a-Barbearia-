@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession } from "@/lib/auth-session";
+import EmailSignInForm from "./email-sign-in-form";
 import GoogleSignInButton from "./sign-in-button";
 
 export const metadata: Metadata = {
@@ -48,6 +49,12 @@ async function LoginContent() {
           Acesse sua agenda e acompanhe seus agendamentos.
         </p>
 
+        <EmailSignInForm />
+
+        <div aria-hidden="true" className="auth-divider auth-divider-social">
+          <span>ou entre com Google</span>
+        </div>
+
         <GoogleSignInButton enabled={googleConfigured} />
 
         {!googleConfigured && (
@@ -56,6 +63,10 @@ async function LoginContent() {
             do sistema.
           </p>
         )}
+
+        <p className="auth-switch">
+          Ainda não tem conta? <Link href="/cadastro">Cadastre-se</Link>
+        </p>
 
         <Link className="auth-back-link" href="/">
           Voltar para a página de agendamento

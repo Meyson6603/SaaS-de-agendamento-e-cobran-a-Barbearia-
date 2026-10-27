@@ -33,6 +33,8 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - O cliente precisará de uma conta para confirmar um agendamento e consultar seu histórico e próximos horários.
 - Cada profissional terá uma conta para acessar sua própria agenda e consultar os clientes e horários dos atendimentos atribuídos a ele.
 - O login com Google é a primeira opção planejada para barbearias e clientes; outros provedores poderão ser avaliados depois.
+- O cadastro e o login por e-mail e senha também estão disponíveis; senhas precisam ter entre 8 e 128 caracteres e são confirmadas no cadastro.
+- O envio de e-mails de verificação e de recuperação de senha ainda não está configurado.
 - No fluxo do cliente, o login será solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
 - O fluxo demonstrativo exige login antes de exibir a etapa final, mas ainda não cria nem salva agendamentos.
@@ -187,8 +189,8 @@ npx auth secret      # gera um segredo para configurar em BETTER_AUTH_SECRET
 
 ## Status
 
-O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário. O formulário e a tela de conclusão só aparecem para usuários autenticados; a demonstração não cria nem salva agendamentos.
+O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário. O formulário e a tela de conclusão só aparecem para usuários autenticados; a demonstração ainda não cria nem salva agendamentos.
 
-Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O login com Google e a proteção inicial de `/dashboard` estão implementados com Better Auth, mas precisam das credenciais OAuth do Google configuradas para funcionar.
+Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A validação de formato não confirma que a linha existe ou pertence ao cliente; isso exigirá OTP por SMS ou WhatsApp. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
 
-Ainda precisam ser implementados: autorização por papel e barbearia, onboarding, painel administrativo, operações reais de leitura e gravação, disponibilidade em tempo real, proteção contra reservas concorrentes e integrações de pagamento. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.
+Ainda precisam ser implementados: confirmação e gravação de agendamentos pelo fluxo público, disponibilidade em tempo real, autorização por papel e barbearia, onboarding, painel administrativo, proteção contra reservas concorrentes e integrações de pagamento. Até esses fluxos existirem, as seções de agenda, histórico e pagamentos podem estar vazias. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.

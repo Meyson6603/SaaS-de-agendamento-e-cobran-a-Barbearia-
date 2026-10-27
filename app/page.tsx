@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import ServicePicker, { type Service } from "./_components/service-picker";
 import { getSession } from "@/lib/auth-session";
+import AccountMenu from "./_components/account-menu";
+import { prisma } from "@/lib/prisma";
 
 const services: Service[] = [
   {
@@ -50,9 +52,9 @@ export default function Home() {
         </Link>
         <div className="header-actions">
           <span className="header-caption">AGENDAMENTO ONLINE</span>
-          <Link className="header-account-link" href="/login">
-            Entrar
-          </Link>
+          <Suspense fallback={<Link className="header-account-link" href="/login">Entrar</Link>}>
+            <HomeAccountMenu />
+          </Suspense>
         </div>
       </header>
 
@@ -89,12 +91,45 @@ export default function Home() {
   );
 }
 
+async function HomeAccountMenu() {
+  const session = await getSession();
+
+  if (!session) {
+    return (
+      <Link className="header-account-link" href="/login">
+        Entrar
+      </Link>
+    );
+  }
+
+  return <AccountMenu name={session.user.name} />;
+}
+
 async function AuthenticatedServicePicker() {
   const session = await getSession();
+  const user = session
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { phone: true },
+      })
+    : null;
+
+  if (session && !user) {
+    throw new Error("The authenticated user could not be loaded.");
+  }
 
   return (
     <ServicePicker
       isAuthenticated={Boolean(session)}
+      customerProfile={
+        session
+          ? {
+              name: session.user.name,
+              email: session.user.email,
+              phone: user?.phone ?? null,
+            }
+          : null
+      }
       services={services}
     />
   );

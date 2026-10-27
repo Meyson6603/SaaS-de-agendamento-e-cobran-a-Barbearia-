@@ -16,6 +16,11 @@ export const auth = betterAuth({
   account: {
     encryptOAuthTokens: true,
   },
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+  },
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: [baseURL],
   socialProviders:

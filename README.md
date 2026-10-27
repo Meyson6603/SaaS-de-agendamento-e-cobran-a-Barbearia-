@@ -31,9 +31,51 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 
 - A barbearia terá uma conta para acessar o painel e administrar sua operação.
 - O cliente precisará de uma conta para confirmar um agendamento e consultar seu histórico e próximos horários.
+- Cada profissional terá uma conta para acessar sua própria agenda e consultar os clientes e horários dos atendimentos atribuídos a ele.
 - O login com Google é a primeira opção planejada para barbearias e clientes; outros provedores poderão ser avaliados depois.
 - No fluxo do cliente, o login será solicitado depois da escolha do serviço e do horário, antes da confirmação.
+- O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
 - Essas regras estão definidas para o produto, mas autenticação, contas e persistência ainda não foram implementadas.
+
+## Fluxo administrativo do MVP
+
+### Primeira configuração da barbearia
+
+1. O dono cria uma conta e acessa o painel.
+2. Cadastra os dados da barbearia.
+3. Adiciona os profissionais e os serviços oferecidos.
+4. Define quais serviços cada profissional atende.
+5. Configura os horários de trabalho e as folgas de cada profissional.
+6. Cria ou convida as contas dos profissionais para que acessem suas agendas.
+7. Revisa a página pública e compartilha o link de agendamento com os clientes.
+
+### Operação diária
+
+- O painel apresenta a agenda por dia e permite filtrar por profissional.
+- O dono ou gerente pode criar, consultar, alterar e cancelar agendamentos.
+- Cada profissional pode consultar somente os agendamentos da própria agenda, com os dados necessários para realizar o atendimento.
+- Cada profissional tem sua própria disponibilidade; o cliente poderá escolher um profissional específico ou pedir o primeiro disponível.
+- Depois de selecionar serviço, profissional (ou qualquer disponível), data e horário, o cliente entra com sua conta antes de confirmar.
+- A confirmação será imediata quando o horário ainda estiver disponível; o sistema deve validar novamente a disponibilidade ao salvar para evitar reservas duplicadas.
+- O painel permite registrar o pagamento do atendimento, inclusive quando recebido presencialmente.
+
+Esse é o fluxo inicial planejado, não uma descrição de funcionalidades já existentes. Regras detalhadas de cancelamento, exceções de horário, notificações e permissões ainda precisam ser definidas.
+
+### Conceitos de dados previstos
+
+O modelo inicial deverá representar pelo menos:
+
+- **Conta de usuário:** identidade de quem acessa, como dono/gerente ou cliente.
+- **Barbearia:** negócio, dados públicos e configurações.
+- **Profissional:** integrante da equipe, associado a uma conta de usuário com acesso restrito à própria agenda.
+- **Serviço:** nome, duração, preço e estado ativo.
+- **Serviço do profissional:** quais serviços cada profissional pode executar.
+- **Disponibilidade:** horários regulares e exceções, como folgas e bloqueios.
+- **Agendamento:** cliente, barbearia, profissional, serviço, início, fim e situação.
+- **Pagamento do atendimento:** método, valor e estado, separado da assinatura da plataforma.
+- **Assinatura da plataforma:** plano e situação comercial da conta da barbearia, caso o modelo por assinatura seja mantido.
+
+Esses conceitos orientam a discussão; ainda não são um esquema de banco de dados definitivo.
 
 ## Pagamentos
 
@@ -41,7 +83,7 @@ Existem dois fluxos financeiros independentes:
 
 ### Assinatura do SaaS
 
-A barbearia paga uma assinatura recorrente para usar a plataforma. A decisão inicial é oferecer um período de teste gratuito antes de iniciar a cobrança. A duração do teste, a exigência e o momento de cadastro do cartão ainda precisam ser definidos. Essa cobrança é recebida pela empresa responsável pelo SaaS.
+A hipótese atual é oferecer um período de teste gratuito antes de cobrar a barbearia por uma assinatura. Ainda está em aberto se o produto será comercializado por assinatura ou como um site/serviço vendido diretamente. Se a assinatura for mantida, a duração do teste, a exigência e o momento de cadastro do cartão ainda precisam ser definidos. Essa cobrança seria recebida pela empresa responsável pelo SaaS.
 
 ### Pagamento dos serviços da barbearia
 

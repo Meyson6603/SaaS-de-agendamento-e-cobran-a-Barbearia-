@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import CustomerDetailsForm, {
   type CustomerDetails,
 } from "./customer-details-form";
@@ -22,6 +23,12 @@ type AvailableDate = {
 };
 
 type ServicePickerProps = {
+  customerProfile: {
+    name: string;
+    email: string;
+    phone: string | null;
+  } | null;
+  isAuthenticated: boolean;
   services: Service[];
 };
 
@@ -76,7 +83,11 @@ function getAvailableDates(): AvailableDate[] {
   return dates;
 }
 
-export default function ServicePicker({ services }: ServicePickerProps) {
+export default function ServicePicker({
+  customerProfile,
+  isAuthenticated,
+  services,
+}: ServicePickerProps) {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
     null,
   );
@@ -112,7 +123,9 @@ export default function ServicePicker({ services }: ServicePickerProps) {
             {isBookingComplete
               ? "Nenhum horário foi reservado e seus dados não foram enviados."
               : hasSelectedSchedule
-                ? "Preencha seus dados para revisar o agendamento."
+                ? customerProfile?.phone
+                  ? "Confira os dados da sua conta para continuar."
+                  : "Informe seu telefone para continuar."
                 : selectedService
                   ? "Selecione um dia e depois um horário disponível."
                   : "Um bom corte começa com um bom momento."}
@@ -310,12 +323,40 @@ export default function ServicePicker({ services }: ServicePickerProps) {
           )}
 
           {selectedService && selectedDate && selectedTime && (
-            <CustomerDetailsForm
-              date={selectedDate}
-              onSubmit={setCustomerDetails}
-              serviceName={selectedService.name}
-              time={selectedTime}
-            />
+            isAuthenticated && customerProfile ? (
+              <CustomerDetailsForm
+                date={selectedDate}
+                customerEmail={customerProfile.email}
+                customerName={customerProfile.name}
+                customerPhone={customerProfile.phone}
+                onSubmit={setCustomerDetails}
+                serviceName={selectedService.name}
+                time={selectedTime}
+              />
+            ) : (
+              isAuthenticated ? (
+                <p className="auth-error" role="alert">
+                  Não foi possível carregar os dados da sua conta.
+                </p>
+              ) : (
+                <section
+                  aria-labelledby="booking-login-heading"
+                  className="customer-section booking-login-required"
+                >
+                  <p className="eyebrow">ENTRE NA SUA CONTA</p>
+                  <h3 id="booking-login-heading">
+                    Faça login para continuar
+                  </h3>
+                  <p>
+                    É necessário entrar na sua conta antes de confirmar um
+                    agendamento. Nenhum horário será confirmado sem login.
+                  </p>
+                  <Link className="booking-login-link" href="/login">
+                    Entrar
+                  </Link>
+                </section>
+              )
+            )
           )}
         </>
       )}
@@ -357,7 +398,8 @@ export default function ServicePicker({ services }: ServicePickerProps) {
             </div>
           </dl>
           <p className="booking-complete-notice">
-            Nenhum dado foi enviado ou salvo.
+            Seu telefone foi salvo na sua conta. Nenhum agendamento foi
+            registrado.
           </p>
           <button
             className="booking-restart"

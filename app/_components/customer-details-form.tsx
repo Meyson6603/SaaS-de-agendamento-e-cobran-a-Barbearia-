@@ -1,6 +1,13 @@
 "use client";
 
 import type { SubmitEvent } from "react";
+import { useState } from "react";
+import { saveCustomerPhone } from "@/app/actions/customer-profile";
+import {
+  formatBrazilianPhone,
+  isValidBrazilianPhone,
+  normalizeBrazilianPhone,
+} from "@/lib/brazilian-phone";
 
 export type CustomerDetails = {
   name: string;
@@ -10,6 +17,9 @@ export type CustomerDetails = {
 };
 
 type CustomerDetailsFormProps = {
+  customerEmail: string;
+  customerName: string;
+  customerPhone: string | null;
   serviceName: string;
   date: string;
   time: string;
@@ -22,19 +32,71 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
 });
 
 export default function CustomerDetailsForm({
+  customerEmail,
+  customerName,
+  customerPhone,
   serviceName,
   date,
   time,
   onSubmit,
 }: CustomerDetailsFormProps) {
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  const [phone, setPhone] = useState(
+    customerPhone ? formatBrazilianPhone(customerPhone) : "",
+  );
+  const [savedPhone, setSavedPhone] = useState(
+    customerPhone ? normalizeBrazilianPhone(customerPhone) : "",
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const hasSavedPhone = Boolean(savedPhone);
+
+  async function persistPhone(value: string) {
+    const digits = normalizeBrazilianPhone(value);
+
+    if (!isValidBrazilianPhone(value)) {
+      setErrorMessage("Informe um telefone brasileiro válido, com DDD e número.");
+      return false;
+    }
+
+    if (digits === savedPhone) {
+      return true;
+    }
+
+    setIsSaving(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await saveCustomerPhone(value);
+
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return false;
+      }
+
+      setPhone(result.phone);
+      setSavedPhone(result.phone);
+      return true;
+    } catch {
+      setErrorMessage("Não foi possível salvar seu telefone. Tente novamente.");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+
+    if (!(await persistPhone(String(formData.get("phone") ?? "").trim()))) {
+      return;
+    }
+
     onSubmit({
-      name: String(formData.get("name") ?? "").trim(),
-      phone: String(formData.get("phone") ?? "").trim(),
-      email: String(formData.get("email") ?? "").trim(),
+      name: customerName,
+      phone: normalizeBrazilianPhone(String(formData.get("phone") ?? "")),
+      email: customerEmail,
       notes: String(formData.get("notes") ?? "").trim(),
     });
   }
@@ -58,40 +120,43 @@ export default function CustomerDetailsForm({
       </div>
 
       <form className="customer-form" onSubmit={handleSubmit}>
-        <div className="form-field">
-          <label htmlFor="customer-name">Nome completo</label>
-          <input
-            autoComplete="name"
-            id="customer-name"
-            name="name"
-            placeholder="Ex.: Ana Silva"
-            required
-            type="text"
-          />
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="customer-phone">Telefone</label>
-          <input
-            autoComplete="tel"
-            id="customer-phone"
-            name="phone"
-            placeholder="(11) 99999-9999"
-            required
-            type="tel"
-          />
-        </div>
-
         <div className="form-field form-field-full">
-          <label htmlFor="customer-email">E-mail</label>
-          <input
-            autoComplete="email"
-            id="customer-email"
-            name="email"
-            placeholder="voce@exemplo.com"
-            required
-            type="email"
-          />
+          <label htmlFor="customer-phone">
+            {hasSavedPhone ? "Telefone salvo" : "Seu telefone"}
+          </label>
+          <div className="phone-input-group">
+            <span aria-hidden="true" className="phone-country-code">
+              +55
+            </span>
+            <input
+              autoComplete="tel-national"
+              id="customer-phone"
+              inputMode="numeric"
+              maxLength={15}
+              name="phone"
+              onBlur={() => {
+                if (phone.trim()) {
+                  void persistPhone(phone);
+                }
+              }}
+              onChange={(event) => {
+                setPhone(formatBrazilianPhone(event.target.value));
+                setErrorMessage(null);
+              }}
+              placeholder="(11) 99999-9999"
+              required
+              type="tel"
+              value={phone}
+            />
+          </div>
+          {hasSavedPhone && (
+            <span className="auth-field-hint">
+              Esse número já está salvo na sua conta.
+            </span>
+          )}
+          <span className="auth-field-hint">
+            Digite o DDD e o número, sem o código do país. Ex.: (11) 99999-9999.
+          </span>
         </div>
 
         <div className="form-field form-field-full">
@@ -106,13 +171,20 @@ export default function CustomerDetailsForm({
           />
         </div>
 
-        <button className="submit-booking" type="submit">
-          Confirmar agendamento
+        {errorMessage && (
+          <p aria-live="polite" className="auth-error form-field-full" role="alert">
+            {errorMessage}
+          </p>
+        )}
+
+        <button className="submit-booking" disabled={isSaving} type="submit">
+          {isSaving ? "Salvando telefone..." : "Confirmar agendamento"}
         </button>
       </form>
 
       <p className="schedule-disclaimer">
-        Demonstração: estes dados não serão enviados nem salvos.
+        Seu telefone fica salvo na sua conta para os próximos agendamentos.
+        Esta demonstração ainda não reserva horários.
       </p>
     </section>
   );

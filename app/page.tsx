@@ -1,5 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import ServicePicker, { type Service } from "./_components/service-picker";
+import { getSession } from "@/lib/auth-session";
+import AccountMenu from "./_components/account-menu";
+import { prisma } from "@/lib/prisma";
 
 const services: Service[] = [
   {
@@ -46,7 +50,12 @@ export default function Home() {
           </span>
           <span>NAVALHA</span>
         </Link>
-        <span className="header-caption">AGENDAMENTO ONLINE</span>
+        <div className="header-actions">
+          <span className="header-caption">AGENDAMENTO ONLINE</span>
+          <Suspense fallback={<Link className="header-account-link" href="/login">Entrar</Link>}>
+            <HomeAccountMenu />
+          </Suspense>
+        </div>
       </header>
 
       <div className="booking-content">
@@ -66,7 +75,11 @@ export default function Home() {
         </section>
 
         <section aria-labelledby="booking-title" className="booking-section">
-          <ServicePicker services={services} />
+          <Suspense
+            fallback={<p className="auth-loading">Verificando sua conta...</p>}
+          >
+            <AuthenticatedServicePicker />
+          </Suspense>
         </section>
 
         <footer className="page-footer">
@@ -75,5 +88,49 @@ export default function Home() {
         </footer>
       </div>
     </main>
+  );
+}
+
+async function HomeAccountMenu() {
+  const session = await getSession();
+
+  if (!session) {
+    return (
+      <Link className="header-account-link" href="/login">
+        Entrar
+      </Link>
+    );
+  }
+
+  return <AccountMenu name={session.user.name} />;
+}
+
+async function AuthenticatedServicePicker() {
+  const session = await getSession();
+  const user = session
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { phone: true },
+      })
+    : null;
+
+  if (session && !user) {
+    throw new Error("The authenticated user could not be loaded.");
+  }
+
+  return (
+    <ServicePicker
+      isAuthenticated={Boolean(session)}
+      customerProfile={
+        session
+          ? {
+              name: session.user.name,
+              email: session.user.email,
+              phone: user?.phone ?? null,
+            }
+          : null
+      }
+      services={services}
+    />
   );
 }

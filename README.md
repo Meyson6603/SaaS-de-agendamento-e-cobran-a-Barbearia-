@@ -17,7 +17,7 @@ Barbearias precisam conciliar agenda, informações de serviços, clientes e pag
 
 A primeira versão deve validar o fluxo principal de agendamento:
 
-- criação da conta da barbearia e acesso ao painel administrativo;
+- cadastro administrativo da barbearia e atribuição de acesso ao proprietário;
 - cadastro da barbearia, profissionais e serviços;
 - configuração de horários e disponibilidade;
 - página pública para clientes consultarem serviços e horários, com conta obrigatória para confirmar o agendamento;
@@ -44,13 +44,13 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 
 ### Primeira configuração da barbearia
 
-1. O dono cria uma conta e acessa o painel.
-2. Cadastra os dados da barbearia.
-3. Adiciona os profissionais e os serviços oferecidos.
-4. Define quais serviços cada profissional atende.
-5. Configura os horários de trabalho e as folgas de cada profissional.
-6. Cria ou convida as contas dos profissionais para que acessem suas agendas.
-7. Revisa a página pública e compartilha o link de agendamento com os clientes.
+1. O proprietário cria e verifica sua conta.
+2. O administrador da plataforma cadastra a barbearia e vincula a conta do proprietário.
+3. O proprietário pode adicionar outros usuários já cadastrados como gerentes.
+4. O proprietário e os gerentes adicionam os profissionais e os serviços oferecidos.
+5. Definem quais serviços cada profissional atende e configuram horários e folgas.
+6. Criam ou convidam as contas dos profissionais para que acessem suas agendas.
+7. Revisam a página pública e compartilham o link de agendamento com os clientes.
 
 ### Operação diária
 
@@ -168,9 +168,15 @@ O arquivo `.env.example` lista todas as variáveis esperadas. Nunca compartilhe 
 
 ### Administração da plataforma
 
-O painel global fica em `/admin` e exige uma sessão autenticada com e-mail verificado listado em `PLATFORM_ADMIN_EMAILS`. Configure um ou mais endereços no `.env`, separados por vírgula. Essa allowlist é diferente dos papéis de proprietário e gerente de uma barbearia.
+O painel global fica em `/admin` e exige uma sessão autenticada com e-mail verificado listado em `PLATFORM_ADMIN_EMAILS`. Configure um ou mais endereços no `.env`, separados por vírgula. Administradores da plataforma também podem acessar `/gerencia` e selecionar qualquer barbearia, sem que isso altere seus papéis de proprietário ou gerente.
 
-O painel apresenta indicadores agregados e listas de barbearias e usuários. Nesta etapa, as listas são somente para consulta; não há ações de edição, suspensão ou exclusão. A tela de configurações exibe apenas o estado de configuração, nunca valores secretos.
+O painel apresenta indicadores agregados e listas de barbearias e usuários. Na área de barbearias, o administrador pode cadastrar uma barbearia e atribuir o primeiro proprietário a uma conta existente e verificada. Edição, suspensão ou exclusão ainda não estão disponíveis. A tela de configurações exibe apenas o estado de configuração, nunca valores secretos.
+
+### Painel da barbearia
+
+O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários ou administradores podem adicionar contas existentes e verificadas como `MANAGER`. Convites por e-mail ainda não estão configurados.
+
+O painel mostra indicadores e próximos atendimentos. O cadastro de equipe, serviços, disponibilidade e edição dos dados da barbearia será implementado nas próximas etapas. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
 
 ### Comandos disponíveis
 
@@ -199,4 +205,4 @@ O repositório já contém uma interface demonstrativa do fluxo público de agen
 
 Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A validação de formato não confirma que a linha existe ou pertence ao cliente; isso exigirá OTP por SMS ou WhatsApp. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
 
-Ainda precisam ser implementados: confirmação e gravação de agendamentos pelo fluxo público, disponibilidade em tempo real, autorização por papel e barbearia, onboarding, painel administrativo, proteção contra reservas concorrentes e integrações de pagamento. Até esses fluxos existirem, as seções de agenda, histórico e pagamentos podem estar vazias. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.
+Ainda precisam ser implementados: confirmação e gravação de agendamentos pelo fluxo público, disponibilidade em tempo real, autorização completa por papel e barbearia, cadastro da equipe e dos serviços, proteção contra reservas concorrentes e integrações de pagamento. Até esses fluxos existirem, as seções de agenda, histórico e pagamentos podem estar vazias. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.

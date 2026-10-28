@@ -12,6 +12,16 @@ function getAllowedAdminEmails(): Set<string> {
   );
 }
 
+export function isPlatformAdmin(user: {
+  email: string;
+  emailVerified: boolean;
+}): boolean {
+  return (
+    user.emailVerified &&
+    getAllowedAdminEmails().has(user.email.trim().toLowerCase())
+  );
+}
+
 export async function requirePlatformAdmin() {
   const session = await requireSession();
   const allowedAdminEmails = getAllowedAdminEmails();
@@ -22,10 +32,7 @@ export async function requirePlatformAdmin() {
     );
   }
 
-  if (
-    !session.user.emailVerified ||
-    !allowedAdminEmails.has(session.user.email.trim().toLowerCase())
-  ) {
+  if (!isPlatformAdmin(session.user)) {
     redirect("/dashboard");
   }
 

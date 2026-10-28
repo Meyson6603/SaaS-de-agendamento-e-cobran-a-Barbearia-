@@ -1792,6 +1792,408 @@ a {
   font-size: 10px;
 }
 
+.manager-page {
+  min-height: 100vh;
+  background: #f5f4f1;
+}
+
+.manager-header-user {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.manager-content {
+  display: grid;
+  width: min(100% - 48px, 980px);
+  align-content: start;
+  gap: 18px;
+  margin: 34px auto 60px;
+}
+
+.manager-page-heading {
+  display: flex;
+  min-height: 90px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.manager-page-heading .eyebrow,
+.manager-form-heading .eyebrow,
+.manager-panel-heading .eyebrow,
+.manager-next-steps .eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-dark);
+}
+
+.manager-page-heading h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(27px, 4vw, 36px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.manager-page-heading p:last-child {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.manager-shop-slug {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.manager-shop-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  font-size: 11px;
+}
+
+.manager-shop-switcher > span {
+  margin-right: 4px;
+  color: var(--muted);
+}
+
+.manager-shop-switcher a {
+  padding: 6px 9px;
+  border-radius: 4px;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.manager-shop-switcher a[aria-current="page"] {
+  background: #302a24;
+  color: #fff;
+}
+
+.manager-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manager-metric,
+.manager-panel,
+.manager-next-steps,
+.manager-setup-form {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.manager-metric {
+  display: flex;
+  min-height: 96px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.manager-metric > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.manager-metric > strong {
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.manager-panel {
+  padding: 20px;
+}
+
+.manager-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.manager-panel-heading .eyebrow {
+  color: var(--muted);
+}
+
+.manager-panel-heading h2,
+.manager-next-steps h2,
+.manager-form-heading h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.manager-panel-heading > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.manager-booking-list {
+  display: grid;
+}
+
+.manager-booking {
+  display: grid;
+  grid-template-columns: minmax(125px, 0.7fr) minmax(0, 2fr);
+  gap: 18px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+
+.manager-booking time {
+  color: var(--accent-dark);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.manager-booking > div {
+  display: grid;
+  gap: 4px;
+}
+
+.manager-booking strong {
+  font-size: 12px;
+}
+
+.manager-booking > div span,
+.manager-empty {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.manager-empty {
+  margin: 0;
+  padding: 13px 0 2px;
+  border-top: 1px solid var(--line);
+  line-height: 1.6;
+}
+
+.manager-next-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px;
+}
+
+.manager-next-steps h2 {
+  font-size: 19px;
+}
+
+.manager-next-steps p:last-child {
+  max-width: 520px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.manager-next-steps dl {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 18px;
+  margin: 0;
+}
+
+.manager-next-steps dl div {
+  display: grid;
+  gap: 5px;
+}
+
+.manager-next-steps dt {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.manager-next-steps dd {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.manager-setup-form {
+  padding: 25px;
+  display: grid;
+  gap: 16px;
+}
+
+.manager-form-heading > p:last-child {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.manager-form-field {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+}
+
+.manager-form-field > label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.manager-form-field > label span,
+.manager-field-help {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.manager-form-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid #dcd9d2;
+  border-radius: 5px;
+  background: #fff;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+}
+
+.manager-form-field input:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid #c09b7240;
+}
+
+.manager-slug-input {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  border: 1px solid #dcd9d2;
+  border-radius: 5px;
+  background: #f7f6f3;
+}
+
+.manager-slug-input > span {
+  flex: 0 0 auto;
+  padding-left: 11px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.manager-slug-input input {
+  border: 0;
+  background: transparent;
+}
+
+.manager-slug-input input:focus-visible {
+  outline-offset: -3px;
+}
+
+.manager-setup-form .auth-submit {
+  width: 100%;
+}
+
+.manager-access-pending {
+  display: grid;
+  justify-items: start;
+  gap: 11px;
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.manager-access-pending .eyebrow,
+.manager-access-pending h1,
+.manager-access-pending p {
+  margin: 0;
+}
+
+.manager-access-pending h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 4vw, 32px);
+  font-weight: 500;
+}
+
+.manager-access-pending > p:not(.eyebrow) {
+  max-width: 600px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.manager-return-link {
+  min-width: 190px;
+  padding: 0 16px;
+}
+
+.manager-team-panel {
+  display: grid;
+  gap: 15px;
+}
+
+.manager-team-panel .manager-panel-heading {
+  margin: 0;
+}
+
+.manager-team-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.manager-team-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+}
+
+.manager-team-list li span:last-child {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.manager-team-form {
+  display: grid;
+  max-width: 460px;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.manager-team-form .auth-submit {
+  justify-self: start;
+  min-width: 170px;
+  padding: 0 15px;
+}
+
+.manager-team-form > .manager-field-help {
+  line-height: 1.5;
+}
+
 @media (max-width: 760px) {
   .admin-layout {
     width: min(100% - 32px, 600px);
@@ -1841,6 +2243,41 @@ a {
   .admin-panel {
     padding: 15px;
   }
+
+  .manager-content {
+    width: min(100% - 32px, 600px);
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  .manager-setup-form {
+    padding: 19px 16px;
+  }
+
+  .manager-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .manager-metric {
+    min-height: 84px;
+    padding: 13px;
+  }
+
+  .manager-metric > strong {
+    font-size: 20px;
+  }
+
+  .manager-panel,
+  .manager-next-steps {
+    padding: 15px;
+  }
+
+  .manager-next-steps {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -1870,6 +2307,56 @@ a {
 
   .admin-table tbody th {
     white-space: normal;
+  }
+
+  .manager-header-user {
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  .manager-content {
+    width: min(100% - 24px, 600px);
+    margin-top: 14px;
+  }
+
+  .manager-page-heading {
+    min-height: 75px;
+  }
+
+  .manager-page-heading h1 {
+    font-size: 27px;
+  }
+
+  .manager-shop-slug {
+    font-size: 9px;
+  }
+
+  .manager-metric {
+    min-height: 78px;
+    padding: 11px;
+  }
+
+  .manager-metric > span {
+    font-size: 10px;
+  }
+
+  .manager-metric > strong {
+    font-size: 18px;
+  }
+
+  .manager-booking {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .manager-team-list li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .manager-next-steps dl {
+    flex-wrap: wrap;
   }
 }
 

@@ -4,6 +4,7 @@ import SignOutButton from "../dashboard/sign-out-button";
 const navigation = [
   { href: "/admin", label: "Visão geral" },
   { href: "/admin/barbearias", label: "Barbearias" },
+  { href: "/gerencia", label: "Gestão das barbearias" },
   { href: "/admin/usuarios", label: "Usuários" },
   { href: "/admin/configuracoes", label: "Configurações" },
 ];

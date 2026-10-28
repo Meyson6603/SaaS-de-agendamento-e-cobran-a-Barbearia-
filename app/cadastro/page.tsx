@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession } from "@/lib/auth-session";
+import { getSafeRedirectTo } from "@/lib/redirect-url";
 import EmailSignUpForm from "./email-sign-up-form";
 
 export const metadata: Metadata = {
@@ -10,19 +11,25 @@ export const metadata: Metadata = {
   description: "Crie sua conta para acessar os serviços da Navalha Barbearia.",
 };
 
-export default function SignUpPage() {
+export default function SignUpPage(props: PageProps<"/cadastro">) {
   return (
     <Suspense fallback={<p className="auth-loading">Carregando cadastro...</p>}>
-      <SignUpContent />
+      <SignUpContent searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
-async function SignUpContent() {
+async function SignUpContent({
+  searchParams,
+}: {
+  searchParams: PageProps<"/cadastro">["searchParams"];
+}) {
+  const search = await searchParams;
+  const redirectTo = getSafeRedirectTo(search.redirectTo);
   const session = await getSession();
 
   if (session) {
-    redirect("/dashboard");
+    redirect(redirectTo);
   }
 
   return (
@@ -44,10 +51,13 @@ async function SignUpContent() {
           Cadastre-se com seu nome, e-mail e uma senha.
         </p>
 
-        <EmailSignUpForm />
+        <EmailSignUpForm redirectTo={redirectTo} />
 
         <p className="auth-switch">
-          Já tem uma conta? <Link href="/login">Entre</Link>
+          Já tem uma conta?{" "}
+          <Link href={`/login?redirectTo=${encodeURIComponent(redirectTo)}`}>
+            Entre
+          </Link>
         </p>
         <Link className="auth-back-link" href="/">
           Voltar para a página de agendamento

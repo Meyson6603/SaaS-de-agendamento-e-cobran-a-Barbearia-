@@ -36,10 +36,10 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - O cadastro e o login por e-mail e senha também estão disponíveis; senhas precisam ter entre 8 e 128 caracteres e são confirmadas no cadastro.
 - O envio de e-mails de verificação e de recuperação de senha ainda não está configurado.
 - Profissionais vinculados a uma conta podem consultar em `/profissional` os próprios agendamentos confirmados e os dados de contato necessários dos clientes.
-- No fluxo do cliente, o login será solicitado depois da escolha do serviço e do horário, antes da confirmação.
+- No fluxo do cliente, o login é solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
-- O fluxo demonstrativo exige login antes de exibir a etapa final, mas ainda não cria nem salva agendamentos.
-- A proteção definitiva da confirmação deverá validar a sessão no servidor junto com a gravação do agendamento.
+- Clientes autenticados podem confirmar agendamentos em `/{slug}`; a confirmação valida a sessão, a disponibilidade e os dados do serviço no servidor.
+- O telefone do cliente é salvo no perfil antes da confirmação. O sistema ainda não verifica a posse da linha por SMS ou WhatsApp.
 
 ## Fluxo administrativo do MVP
 
@@ -48,22 +48,22 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 1. O proprietário cria e verifica sua conta.
 2. O administrador da plataforma cadastra a barbearia e vincula a conta do proprietário.
 3. O proprietário pode adicionar outros usuários já cadastrados como gerentes.
-4. O proprietário e os gerentes adicionam os profissionais e os serviços oferecidos.
-5. Definem quais serviços cada profissional atende e configuram horários e folgas.
-6. Criam ou convidam as contas dos profissionais para que acessem suas agendas.
-7. Revisam a página pública e compartilham o link de agendamento com os clientes.
+4. O proprietário e os gerentes vinculam profissionais que já tenham uma conta verificada.
+5. Cadastram os serviços, associam cada serviço aos profissionais que o oferecem e definem a disponibilidade semanal.
+6. Compartilham o link público `/{slug}` para os clientes consultarem serviços e horários.
+7. Solicitações de folga e bloqueios pontuais ainda não têm interface de configuração.
 
 ### Operação diária
 
 - O painel apresenta a agenda por dia e permite filtrar por profissional.
-- O dono ou gerente pode criar, consultar, alterar e cancelar agendamentos.
+- O cliente agenda a partir dos serviços e horários publicados; proprietários, gerentes e profissionais consultam os agendamentos de acordo com seus acessos.
 - Cada profissional pode consultar somente os agendamentos da própria agenda, com os dados necessários para realizar o atendimento.
-- Cada profissional tem sua própria disponibilidade; o cliente poderá escolher um profissional específico ou pedir o primeiro disponível.
-- Depois de selecionar serviço, profissional (ou qualquer disponível), data e horário, o cliente entra com sua conta antes de confirmar.
-- A confirmação será imediata quando o horário ainda estiver disponível; o sistema deve validar novamente a disponibilidade ao salvar para evitar reservas duplicadas.
+- Cada profissional tem sua própria disponibilidade semanal; o cliente escolhe o profissional, data e horário.
+- Depois de selecionar serviço, profissional, data e horário, o cliente entra com sua conta antes de confirmar.
+- A confirmação valida novamente a disponibilidade dentro de uma transação serializável para evitar reservas duplicadas.
 - O painel permite registrar o pagamento do atendimento, inclusive quando recebido presencialmente.
 
-Esse é o fluxo inicial planejado, não uma descrição de funcionalidades já existentes. Regras detalhadas de cancelamento, exceções de horário, notificações e permissões ainda precisam ser definidas.
+Regras detalhadas de cancelamento, exceções de horário, notificações e pagamentos ainda precisam ser definidas.
 
 ### Conceitos de dados previstos
 
@@ -177,7 +177,9 @@ O painel apresenta indicadores agregados e listas de barbearias e usuários. Na 
 
 O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários ou administradores podem adicionar contas existentes e verificadas como `MANAGER`. Convites por e-mail ainda não estão configurados.
 
-O painel mostra indicadores, próximos atendimentos e permite consultar e adicionar gerentes. O cadastro de equipe, serviços, disponibilidade e edição dos dados da barbearia será implementado nas próximas etapas. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
+O painel mostra indicadores, próximos atendimentos e permite consultar/adicionar gerentes, profissionais, serviços e horários semanais. Profissionais precisam ter uma conta verificada preexistente. Os horários são recorrentes, e as opções públicas são geradas em intervalos de 15 minutos para os próximos 14 dias. A edição e desativação de cadastros, bloqueios pontuais e gestão de cancelamentos ainda não estão disponíveis. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
+
+O link público usa o identificador da barbearia, por exemplo `/{slug}`. O endereço `/` redireciona para a única barbearia cadastrada ou mostra a lista quando há várias. Ao confirmar, o sistema salva o agendamento e um registro de pagamento pendente; nenhum pagamento é processado.
 
 Profissionais com vínculo `PROFESSIONAL` e perfil associado podem acessar `/profissional` para consultar, com paginação, os agendamentos confirmados em andamento ou futuros dos próprios perfis profissionais e os dados de contato dos clientes. Administradores da plataforma também podem acessar a página e selecionar qualquer perfil profissional. O acesso é validado no servidor; usuários sem perfil profissional associado recebem uma orientação para solicitar o vínculo ao proprietário ou gerente.
 
@@ -204,8 +206,8 @@ npx auth secret      # gera um segredo para configurar em BETTER_AUTH_SECRET
 
 ## Status
 
-O repositório já contém uma interface demonstrativa do fluxo público de agendamento, incluindo seleção de serviço, data e horário. O formulário e a tela de conclusão só aparecem para usuários autenticados; a demonstração ainda não cria nem salva agendamentos.
+O fluxo público de agendamento consulta serviços e disponibilidade real, exige autenticação para confirmar e grava o agendamento no PostgreSQL. A disponibilidade é revalidada na transação, e o pagamento fica pendente até ser registrado pela barbearia. O gerenciamento da equipe, serviços e horários semanais está disponível em `/gerencia`.
 
 Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A validação de formato não confirma que a linha existe ou pertence ao cliente; isso exigirá OTP por SMS ou WhatsApp. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
 
-Ainda precisam ser implementados: confirmação e gravação de agendamentos pelo fluxo público, disponibilidade em tempo real, autorização completa por papel e barbearia, cadastro da equipe e dos serviços, proteção contra reservas concorrentes e integrações de pagamento. Até esses fluxos existirem, as seções de agenda, histórico e pagamentos podem estar vazias. As decisões registradas neste README descrevem o produto planejado, não funcionalidades já disponíveis.
+Ainda precisam ser implementados: edição e desativação dos cadastros, bloqueios pontuais de agenda, cancelamento e remarcação de agendamentos, notificações e integrações de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. A confirmação de telefone também depende de uma futura integração de verificação por SMS ou WhatsApp.

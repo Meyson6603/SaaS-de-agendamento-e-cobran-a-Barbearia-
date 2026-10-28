@@ -5,10 +5,12 @@ import { authClient } from "@/lib/auth-client";
 
 type GoogleSignInButtonProps = {
   enabled: boolean;
+  redirectTo: string;
 };
 
 export default function GoogleSignInButton({
   enabled,
+  redirectTo,
 }: GoogleSignInButtonProps) {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function GoogleSignInButton({
     try {
       const result = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: redirectTo,
       });
 
       if (result.error) {

@@ -574,6 +574,78 @@ a {
   margin: 53px auto 0;
 }
 
+.shop-directory {
+  display: grid;
+  gap: 24px;
+}
+
+.shop-directory-list {
+  display: grid;
+  gap: 10px;
+}
+
+.shop-directory-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.shop-directory-card > span:nth-child(2) {
+  display: grid;
+  gap: 5px;
+}
+
+.shop-directory-card strong {
+  font-size: 13px;
+}
+
+.shop-directory-card > span:nth-child(2) > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.shop-directory-arrow {
+  color: var(--accent-dark);
+  font-size: 20px;
+}
+
+.shop-directory-card:hover {
+  border-color: var(--accent);
+}
+
+.shop-directory-card:focus-visible {
+  outline: 3px solid #c09b7240;
+  outline-offset: 3px;
+}
+
+.shop-directory-empty {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.shop-directory-empty h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.shop-directory-empty p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .shop-card {
   display: flex;
   min-height: 116px;
@@ -653,6 +725,7 @@ a {
   margin-bottom: 10px;
 }
 
+.booking-heading h1,
 .booking-heading h2 {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
@@ -880,6 +953,35 @@ a {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+}
+
+.professional-option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.professional-option {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.professional-option:hover,
+.professional-option-selected {
+  border-color: var(--foreground);
+  background: #302a24;
+  color: #fff;
+}
+
+.professional-option:focus-visible {
+  outline: 3px solid #c09b7240;
+  outline-offset: 3px;
 }
 
 .schedule-heading {
@@ -1922,6 +2024,118 @@ a {
   padding: 20px;
 }
 
+.booking-setup {
+  display: grid;
+  gap: 18px;
+}
+
+.booking-setup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.booking-setup-block {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.booking-setup-block h3 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.booking-config-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booking-config-list li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.booking-config-list li > div {
+  display: grid;
+  gap: 4px;
+}
+
+.booking-config-list strong {
+  font-size: 11px;
+}
+
+.booking-config-list span {
+  color: var(--muted);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.booking-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.manager-form-field select,
+.manager-form-field input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid #dcd9d2;
+  border-radius: 5px;
+  background: #fff;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+}
+
+.manager-form-field select:focus-visible,
+.manager-form-field input[type="time"]:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid #c09b7240;
+}
+
+.manager-form-field select:disabled {
+  background: #f7f6f3;
+  color: var(--muted);
+}
+
+.booking-professional-options {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.booking-professional-options legend {
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.booking-professional-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.booking-professional-options input {
+  accent-color: var(--accent-dark);
+}
+
 .manager-panel-heading {
   display: flex;
   align-items: center;
@@ -2395,6 +2609,10 @@ a {
     flex-direction: column;
     gap: 16px;
   }
+
+  .booking-setup-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
@@ -2488,6 +2706,14 @@ a {
 
   .manager-next-steps dl {
     flex-wrap: wrap;
+  }
+
+  .shop-directory-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .shop-directory-arrow {
+    display: none;
   }
 }
 

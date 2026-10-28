@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import BookingSetupForms from "./booking-setup-forms";
 import ManagerTeamForm from "./manager-team-form";
 import { getManagerDashboard } from "@/lib/manager-data";
 
@@ -64,11 +65,16 @@ async function ManagerDashboard({
     shops,
     upcomingBookings,
     managers,
+    professionals,
+    services,
+    weeklyAvailability,
   } = dashboard;
   const formattedRevenue = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
   }).format(Number(metrics.paidRevenue));
+  const isPublicBookingConfigured =
+    metrics.professionals > 0 && metrics.services > 0 && weeklyAvailability.length > 0;
 
   return (
     <>
@@ -112,6 +118,13 @@ async function ManagerDashboard({
         <ManagerMetric label="Pagamentos recebidos" value={formattedRevenue} />
       </section>
 
+      <BookingSetupForms
+        shopId={selectedShop.id}
+        professionals={professionals}
+        services={services}
+        weeklyAvailability={weeklyAvailability}
+      />
+
       <section aria-labelledby="manager-bookings-title" className="manager-panel">
         <div className="manager-panel-heading">
           <div>
@@ -144,21 +157,23 @@ async function ManagerDashboard({
 
       <section aria-labelledby="manager-next-steps-title" className="manager-next-steps">
         <div>
-          <p className="eyebrow">PRÓXIMAS CONFIGURAÇÕES</p>
-          <h2 id="manager-next-steps-title">Prepare sua operação</h2>
+          <p className="eyebrow">AGENDA PÚBLICA</p>
+          <h2 id="manager-next-steps-title">Compartilhe seu link</h2>
           <p>
-            O cadastro da equipe, dos serviços e dos horários será adicionado
-            nas próximas etapas.
+            Compartilhe o link público da barbearia para que os clientes
+            consultem os serviços e horários disponíveis.
           </p>
         </div>
         <dl>
           <div>
-            <dt>Equipe</dt>
-            <dd>{metrics.professionals ? "Configurada" : "Pendente"}</dd>
+            <dt>Link público</dt>
+            <dd>
+              <Link href={`/${selectedShop.slug}`}>/{selectedShop.slug}</Link>
+            </dd>
           </div>
           <div>
-            <dt>Serviços</dt>
-            <dd>{metrics.services ? "Configurados" : "Pendente"}</dd>
+            <dt>Configuração</dt>
+            <dd>{isPublicBookingConfigured ? "Pronta" : "Pendente"}</dd>
           </div>
         </dl>
       </section>

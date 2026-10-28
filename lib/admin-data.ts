@@ -114,7 +114,8 @@ export async function getPlatformSettingsStatus() {
   await requirePlatformAdmin();
 
   return {
-    baseUrl: process.env.BETTER_AUTH_URL ?? "Não configurada",
+    baseUrl:
+      process.env.BETTER_AUTH_URL ?? "http://localhost:3000 (padrão local)",
     databaseConfigured: Boolean(process.env.DATABASE_URL),
     googleConfigured: Boolean(
       process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,

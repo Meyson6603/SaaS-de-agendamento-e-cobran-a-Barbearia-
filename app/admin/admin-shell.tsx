@@ -5,6 +5,7 @@ const navigation = [
   { href: "/admin", label: "Visão geral" },
   { href: "/admin/barbearias", label: "Barbearias" },
   { href: "/gerencia", label: "Gestão das barbearias" },
+  { href: "/profissional", label: "Agendas profissionais" },
   { href: "/admin/usuarios", label: "Usuários" },
   { href: "/admin/configuracoes", label: "Configurações" },
 ];

@@ -32,7 +32,8 @@ type ServicePickerProps = {
   services: Service[];
 };
 
-const availableTimes = ["09:00", "10:30", "13:00", "14:30", "16:00"];
+const demoTimes = ["09:00", "10:30", "13:00", "14:30", "16:00"];
+const shopTimeZone = "America/Sao_Paulo";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -51,36 +52,89 @@ function getGreetingName(fullName: string): string {
 
 function getAvailableDates(): AvailableDate[] {
   const dates: AvailableDate[] = [];
-  const date = new Date();
+  const todayParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: shopTimeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(
+    todayParts.map(({ type, value }) => [type, value]),
+  );
+  const date = new Date(
+    Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), 12),
+  );
 
   while (dates.length < 5) {
-    if (date.getDay() !== 0) {
+    if (date.getUTCDay() !== 0) {
       const value = [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0"),
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, "0"),
+        String(date.getUTCDate()).padStart(2, "0"),
       ].join("-");
       const weekday = new Intl.DateTimeFormat("pt-BR", {
         weekday: "short",
+        timeZone: shopTimeZone,
       })
         .format(date)
         .replace(".", "");
       const accessibleLabel = new Intl.DateTimeFormat("pt-BR", {
         dateStyle: "full",
+        timeZone: shopTimeZone,
       }).format(date);
 
       dates.push({
         value,
         weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1),
-        day: String(date.getDate()).padStart(2, "0"),
+        day: String(date.getUTCDate()).padStart(2, "0"),
         accessibleLabel,
       });
     }
 
-    date.setDate(date.getDate() + 1);
+    date.setUTCDate(date.getUTCDate() + 1);
   }
 
   return dates;
+}
+
+function getAvailableTimes(date: string): string[] {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: shopTimeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const values = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value]),
+  );
+  const today = `${values.year}-${values.month}-${values.day}`;
+
+  if (date > today) {
+    return demoTimes;
+  }
+
+  if (date < today) {
+    return [];
+  }
+
+  const timeParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: shopTimeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  const currentTime = Object.fromEntries(
+    timeParts.map(({ type, value }) => [type, value]),
+  );
+  const currentMinutes =
+    Number(currentTime.hour) * 60 + Number(currentTime.minute);
+
+  return demoTimes.filter((time) => {
+    const [hour, minute] = time.split(":").map(Number);
+    const timeMinutes = hour * 60 + minute;
+    return timeMinutes > currentMinutes;
+  });
 }
 
 export default function ServicePicker({
@@ -104,6 +158,7 @@ export default function ServicePicker({
   const hasSelectedSchedule = Boolean(selectedDate && selectedTime);
   const isBookingComplete = Boolean(customerDetails && hasSelectedSchedule);
   const currentStep = hasSelectedSchedule ? 3 : selectedService ? 2 : 1;
+  const selectedDateTimes = selectedDate ? getAvailableTimes(selectedDate) : [];
 
   return (
     <>
@@ -276,23 +331,30 @@ export default function ServicePicker({
               {selectedDate && (
                 <div aria-labelledby="time-heading" className="time-section">
                   <h3 id="time-heading">Horários disponíveis</h3>
-                  <div aria-label="Horários disponíveis" className="time-grid">
-                    {availableTimes.map((time) => {
-                      const isSelected = selectedTime === time;
+                  {selectedDateTimes.length ? (
+                    <div aria-label="Horários disponíveis" className="time-grid">
+                      {selectedDateTimes.map((time) => {
+                        const isSelected = selectedTime === time;
 
-                      return (
-                        <button
-                          aria-pressed={isSelected}
-                          className={`time-option${isSelected ? " time-option-selected" : ""}`}
-                          key={time}
-                          onClick={() => setSelectedTime(time)}
-                          type="button"
-                        >
-                          {time}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        return (
+                          <button
+                            aria-pressed={isSelected}
+                            className={`time-option${isSelected ? " time-option-selected" : ""}`}
+                            key={time}
+                            onClick={() => setSelectedTime(time)}
+                            type="button"
+                          >
+                            {time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="account-empty-state">
+                      Não há mais horários de demonstração para hoje. Escolha
+                      outra data.
+                    </p>
+                  )}
                 </div>
               )}
 

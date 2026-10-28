@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export default function EmailSignUpForm() {
+export default function EmailSignUpForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export default function EmailSignUpForm() {
         return;
       }
 
-      router.replace("/dashboard");
+      router.replace(redirectTo);
       router.refresh();
     } catch {
       setErrorMessage("Não foi possível criar a conta. Tente novamente.");

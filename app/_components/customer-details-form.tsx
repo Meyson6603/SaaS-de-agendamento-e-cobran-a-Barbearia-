@@ -2,6 +2,7 @@
 
 import type { SubmitEvent } from "react";
 import { useState } from "react";
+import { createBooking } from "@/app/actions/booking";
 import { saveCustomerPhone } from "@/app/actions/customer-profile";
 import {
   formatBrazilianPhone,
@@ -9,36 +10,36 @@ import {
   normalizeBrazilianPhone,
 } from "@/lib/brazilian-phone";
 
-export type CustomerDetails = {
-  name: string;
-  phone: string;
-  email: string;
-  notes: string;
-};
-
 type CustomerDetailsFormProps = {
   customerEmail: string;
   customerName: string;
   customerPhone: string | null;
-  serviceName: string;
   date: string;
+  dateValue: string;
+  onBookingComplete: () => void;
+  onRestart: () => void;
+  professionalName: string;
+  professionalId: string;
+  serviceId: string;
+  serviceName: string;
+  shopSlug: string;
   time: string;
-  onSubmit: (details: CustomerDetails) => void;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "long",
-  timeZone: "UTC",
-});
 
 export default function CustomerDetailsForm({
   customerEmail,
   customerName,
   customerPhone,
-  serviceName,
   date,
+  dateValue,
+  onBookingComplete,
+  onRestart,
+  professionalName,
+  professionalId,
+  serviceId,
+  serviceName,
+  shopSlug,
   time,
-  onSubmit,
 }: CustomerDetailsFormProps) {
   const [phone, setPhone] = useState(
     customerPhone ? formatBrazilianPhone(customerPhone) : "",
@@ -47,7 +48,9 @@ export default function CustomerDetailsForm({
     customerPhone ? normalizeBrazilianPhone(customerPhone) : "",
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const hasSavedPhone = Boolean(savedPhone);
 
   async function persistPhone(value: string) {
@@ -73,7 +76,7 @@ export default function CustomerDetailsForm({
         return false;
       }
 
-      setPhone(result.phone);
+      setPhone(formatBrazilianPhone(result.phone));
       setSavedPhone(result.phone);
       return true;
     } catch {
@@ -86,19 +89,64 @@ export default function CustomerDetailsForm({
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-
     const formData = new FormData(event.currentTarget);
+    const phoneValue = String(formData.get("phone") ?? "").trim();
 
-    if (!(await persistPhone(String(formData.get("phone") ?? "").trim()))) {
+    if (!(await persistPhone(phoneValue))) {
       return;
     }
 
-    onSubmit({
-      name: customerName,
-      phone: normalizeBrazilianPhone(String(formData.get("phone") ?? "")),
-      email: customerEmail,
-      notes: String(formData.get("notes") ?? "").trim(),
-    });
+    setIsConfirming(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await createBooking(
+        shopSlug,
+        serviceId,
+        professionalId,
+        dateValue,
+        time,
+        String(formData.get("notes") ?? "").trim(),
+      );
+
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+
+      setBookingConfirmed(true);
+      onBookingComplete();
+    } catch {
+      setErrorMessage("Não foi possível confirmar o agendamento. Tente novamente.");
+    } finally {
+      setIsConfirming(false);
+    }
+  }
+
+  if (bookingConfirmed) {
+    return (
+      <section
+        aria-live="polite"
+        aria-labelledby="booking-complete-heading"
+        className="customer-section booking-complete"
+      >
+        <span aria-hidden="true" className="booking-complete-icon">✓</span>
+        <p className="eyebrow">AGENDAMENTO REGISTRADO</p>
+        <h3 id="booking-complete-heading">Está confirmado, {customerName}!</h3>
+        <p className="booking-complete-message">
+          Seu horário foi salvo e já está disponível na sua conta.
+        </p>
+        <dl className="booking-complete-details">
+          <div><dt>Serviço</dt><dd>{serviceName}</dd></div>
+          <div><dt>Profissional</dt><dd>{professionalName}</dd></div>
+          <div><dt>Data</dt><dd>{date}</dd></div>
+          <div><dt>Horário</dt><dd>{time}</dd></div>
+        </dl>
+        <button className="booking-restart" onClick={onRestart} type="button">
+          Fazer outro agendamento
+        </button>
+      </section>
+    );
   }
 
   return (
@@ -113,10 +161,9 @@ export default function CustomerDetailsForm({
 
       <div className="booking-review">
         <span className="summary-label">RESUMO DO AGENDAMENTO</span>
-        <strong>{serviceName}</strong>
-        <span>
-          {dateFormatter.format(new Date(`${date}T12:00:00Z`))} às {time}
-        </span>
+        <strong>{serviceName} com {professionalName}</strong>
+        <span>{date} às {time}</span>
+        <span>{customerName} · {customerEmail}</span>
       </div>
 
       <form className="customer-form" onSubmit={handleSubmit}>
@@ -125,9 +172,7 @@ export default function CustomerDetailsForm({
             {hasSavedPhone ? "Telefone salvo" : "Seu telefone"}
           </label>
           <div className="phone-input-group">
-            <span aria-hidden="true" className="phone-country-code">
-              +55
-            </span>
+            <span aria-hidden="true" className="phone-country-code">+55</span>
             <input
               autoComplete="tel-national"
               id="customer-phone"
@@ -165,6 +210,7 @@ export default function CustomerDetailsForm({
           </label>
           <textarea
             id="customer-notes"
+            maxLength={500}
             name="notes"
             placeholder="Tem alguma preferência para o atendimento?"
             rows={3}
@@ -177,14 +223,21 @@ export default function CustomerDetailsForm({
           </p>
         )}
 
-        <button className="submit-booking" disabled={isSaving} type="submit">
-          {isSaving ? "Salvando telefone..." : "Confirmar agendamento"}
+        <button
+          className="submit-booking"
+          disabled={isSaving || isConfirming}
+          type="submit"
+        >
+          {isSaving
+            ? "Salvando telefone..."
+            : isConfirming
+              ? "Confirmando..."
+              : "Confirmar agendamento"}
         </button>
       </form>
 
       <p className="schedule-disclaimer">
-        Seu telefone fica salvo na sua conta para os próximos agendamentos.
-        Esta demonstração ainda não reserva horários.
+        Ao confirmar, o horário é validado novamente e salvo na agenda da barbearia.
       </p>
     </section>
   );

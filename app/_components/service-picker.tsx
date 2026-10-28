@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import CustomerDetailsForm, {
-  type CustomerDetails,
-} from "./customer-details-form";
+import { useEffect, useRef, useState } from "react";
+import { loadBookingTimes } from "@/app/actions/booking";
+import CustomerDetailsForm from "./customer-details-form";
+
+type BookingDateOption = {
+  value: string;
+  weekday: string;
+  day: string;
+  accessibleLabel: string;
+};
 
 export type Service = {
   id: string;
@@ -13,13 +19,7 @@ export type Service = {
   duration: number;
   price: number;
   category: string;
-};
-
-type AvailableDate = {
-  value: string;
-  weekday: string;
-  day: string;
-  accessibleLabel: string;
+  professionals: { id: string; displayName: string }[];
 };
 
 type ServicePickerProps = {
@@ -28,137 +28,157 @@ type ServicePickerProps = {
     email: string;
     phone: string | null;
   } | null;
+  dates: BookingDateOption[];
+  initialSelection: {
+    serviceId: string;
+    professionalId: string;
+    date: string;
+    time: string;
+  } | null;
   isAuthenticated: boolean;
   services: Service[];
+  shopSlug: string;
+  timezone: string;
 };
-
-const demoTimes = ["09:00", "10:30", "13:00", "14:30", "16:00"];
-const shopTimeZone = "America/Sao_Paulo";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
 
-function getGreetingName(fullName: string): string {
-  const names = fullName.trim().split(/\s+/).filter(Boolean);
-
-  if (names.length < 2) {
-    return names[0] ?? "";
-  }
-
-  return [names[0], names[names.length - 1]].join(" ");
-}
-
-function getAvailableDates(): AvailableDate[] {
-  const dates: AvailableDate[] = [];
-  const todayParts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: shopTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(
-    todayParts.map(({ type, value }) => [type, value]),
-  );
-  const date = new Date(
-    Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), 12),
-  );
-
-  while (dates.length < 5) {
-    if (date.getUTCDay() !== 0) {
-      const value = [
-        date.getUTCFullYear(),
-        String(date.getUTCMonth() + 1).padStart(2, "0"),
-        String(date.getUTCDate()).padStart(2, "0"),
-      ].join("-");
-      const weekday = new Intl.DateTimeFormat("pt-BR", {
-        weekday: "short",
-        timeZone: shopTimeZone,
-      })
-        .format(date)
-        .replace(".", "");
-      const accessibleLabel = new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "full",
-        timeZone: shopTimeZone,
-      }).format(date);
-
-      dates.push({
-        value,
-        weekday: weekday.charAt(0).toUpperCase() + weekday.slice(1),
-        day: String(date.getUTCDate()).padStart(2, "0"),
-        accessibleLabel,
-      });
-    }
-
-    date.setUTCDate(date.getUTCDate() + 1);
-  }
-
-  return dates;
-}
-
-function getAvailableTimes(date: string): string[] {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: shopTimeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const values = Object.fromEntries(
-    parts.map(({ type, value }) => [type, value]),
-  );
-  const today = `${values.year}-${values.month}-${values.day}`;
-
-  if (date > today) {
-    return demoTimes;
-  }
-
-  if (date < today) {
-    return [];
-  }
-
-  const timeParts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: shopTimeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(now);
-  const currentTime = Object.fromEntries(
-    timeParts.map(({ type, value }) => [type, value]),
-  );
-  const currentMinutes =
-    Number(currentTime.hour) * 60 + Number(currentTime.minute);
-
-  return demoTimes.filter((time) => {
-    const [hour, minute] = time.split(":").map(Number);
-    const timeMinutes = hour * 60 + minute;
-    return timeMinutes > currentMinutes;
-  });
-}
-
 export default function ServicePicker({
   customerProfile,
+  dates,
+  initialSelection,
   isAuthenticated,
   services,
+  shopSlug,
+  timezone,
 }: ServicePickerProps) {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(
-    null,
+    initialSelection?.serviceId ?? null,
   );
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState<string | null>(
+    initialSelection?.professionalId ?? null,
+  );
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    initialSelection?.date ?? null,
+  );
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [customerDetails, setCustomerDetails] =
-    useState<CustomerDetails | null>(null);
-  const selectedService = services.find(
-    (service) => service.id === selectedServiceId,
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [isLoadingTimes, setIsLoadingTimes] = useState(Boolean(initialSelection));
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [bookingComplete, setBookingComplete] = useState(false);
+  const availabilityRequestId = useRef(0);
+  const selectedService = services.find(({ id }) => id === selectedServiceId);
+  const selectedProfessional = selectedService?.professionals.find(
+    ({ id }) => id === selectedProfessionalId,
   );
-  const greetingName = customerDetails
-    ? getGreetingName(customerDetails.name)
-    : "";
-  const hasSelectedSchedule = Boolean(selectedDate && selectedTime);
-  const isBookingComplete = Boolean(customerDetails && hasSelectedSchedule);
-  const currentStep = hasSelectedSchedule ? 3 : selectedService ? 2 : 1;
-  const selectedDateTimes = selectedDate ? getAvailableTimes(selectedDate) : [];
+  const selectedDateOption = dates.find(({ value }) => value === selectedDate);
+  const step = selectedTime ? 3 : selectedProfessionalId ? 2 : 1;
+
+  useEffect(() => {
+    if (!initialSelection) {
+      return;
+    }
+
+    const requestId = ++availabilityRequestId.current;
+
+    loadBookingTimes(
+      shopSlug,
+      initialSelection.serviceId,
+      initialSelection.professionalId,
+      initialSelection.date,
+    )
+      .then((result) => {
+        if (requestId !== availabilityRequestId.current) {
+          return;
+        }
+
+        if (!result.success) {
+          setAvailabilityError(result.error);
+          return;
+        }
+
+        const times = result.times.map(({ value }) => value);
+        setAvailableTimes(times);
+        if (times.includes(initialSelection.time)) {
+          setSelectedTime(initialSelection.time);
+        } else {
+          setAvailabilityError(
+            "Esse horário não está mais disponível. Escolha um novo horário.",
+          );
+        }
+      })
+      .catch(() => {
+        if (requestId === availabilityRequestId.current) {
+          setAvailabilityError("Não foi possível consultar os horários. Tente novamente.");
+        }
+      })
+      .finally(() => {
+        if (requestId === availabilityRequestId.current) {
+          setIsLoadingTimes(false);
+        }
+      });
+
+    return () => {
+      if (requestId === availabilityRequestId.current) {
+        availabilityRequestId.current += 1;
+      }
+    };
+  }, [initialSelection, shopSlug]);
+
+  function resetSchedule() {
+    availabilityRequestId.current += 1;
+    setSelectedServiceId(null);
+    setSelectedProfessionalId(null);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setAvailableTimes([]);
+    setAvailabilityError(null);
+    setBookingComplete(false);
+  }
+
+  async function selectDate(date: string) {
+    const requestId = ++availabilityRequestId.current;
+    setSelectedDate(date);
+    setSelectedTime(null);
+    setAvailableTimes([]);
+    setAvailabilityError(null);
+    setIsLoadingTimes(true);
+
+    if (!selectedServiceId || !selectedProfessionalId) {
+      setIsLoadingTimes(false);
+      return;
+    }
+
+    try {
+      const result = await loadBookingTimes(
+        shopSlug,
+        selectedServiceId,
+        selectedProfessionalId,
+        date,
+      );
+      if (requestId !== availabilityRequestId.current) {
+        return;
+      }
+
+      if (!result.success) {
+        setAvailabilityError(result.error);
+        return;
+      }
+
+      setAvailableTimes(result.times.map(({ value }) => value));
+    } catch {
+      if (requestId === availabilityRequestId.current) {
+        setAvailabilityError("Não foi possível consultar os horários. Tente novamente.");
+      }
+    } finally {
+      if (requestId === availabilityRequestId.current) {
+        setIsLoadingTimes(false);
+      }
+    }
+  }
 
   return (
     <>
@@ -166,58 +186,59 @@ export default function ServicePicker({
         <div>
           <p className="eyebrow">RESERVE SEU HORÁRIO</p>
           <h2 id="booking-title">
-            {isBookingComplete
-              ? "Demonstração concluída"
-              : hasSelectedSchedule
+            {bookingComplete
+              ? "Agendamento confirmado"
+              : selectedTime
                 ? "Informe seus dados"
-                : selectedService
+                : selectedProfessional
                   ? "Escolha data e horário"
-                  : "Escolha seu serviço"}
+                  : selectedService
+                    ? "Escolha um profissional"
+                    : "Escolha seu serviço"}
           </h2>
           <p className="section-description">
-            {isBookingComplete
-              ? "Nenhum horário foi reservado e seus dados não foram enviados."
-              : hasSelectedSchedule
+            {bookingComplete
+              ? "Seu horário foi registrado e já aparece na sua conta."
+              : selectedTime
                 ? customerProfile?.phone
-                  ? "Confira os dados da sua conta para continuar."
-                  : "Informe seu telefone para continuar."
-                : selectedService
-                  ? "Selecione um dia e depois um horário disponível."
-                  : "Um bom corte começa com um bom momento."}
+                  ? "Confira os dados da sua conta para confirmar."
+                  : "Informe seu telefone para confirmar."
+                : selectedProfessional
+                  ? "Consulte a disponibilidade real da agenda."
+                  : selectedService
+                    ? "Selecione quem realizará o atendimento."
+                    : "Os serviços e horários abaixo são fornecidos pela barbearia."}
           </p>
         </div>
         <span className="step-count">
-          {String(currentStep).padStart(2, "0")} <span>/ 03</span>
+          {String(step).padStart(2, "0")} <span>/ 03</span>
         </span>
       </div>
 
       <div aria-label="Etapas do agendamento" className="stepper">
-        <div
-          aria-current={currentStep === 1 ? "step" : undefined}
-          className={`step${selectedService ? " step-complete" : " step-active"}`}
-        >
-          <span className="step-number">{selectedService ? "✓" : "01"}</span>
-          <span>Serviço</span>
-        </div>
+        <Step label="Serviço" number="01" active={step === 1} complete={Boolean(selectedService)} />
         <span aria-hidden="true" className="step-line" />
-        <div
-          aria-current={currentStep === 2 ? "step" : undefined}
-          className={`step${hasSelectedSchedule ? " step-complete" : selectedService ? " step-active" : ""}`}
-        >
-          <span className="step-number">{hasSelectedSchedule ? "✓" : "02"}</span>
-          <span>Horário</span>
-        </div>
+        <Step
+          label="Horário"
+          number="02"
+          active={step === 2}
+          complete={Boolean(selectedDate && selectedTime)}
+        />
         <span aria-hidden="true" className="step-line" />
-        <div
-          aria-current={currentStep === 3 ? "step" : undefined}
-          className={`step${isBookingComplete ? " step-complete" : hasSelectedSchedule ? " step-active" : ""}`}
-        >
-          <span className="step-number">{isBookingComplete ? "✓" : "03"}</span>
-          <span>Seus dados</span>
-        </div>
+        <Step
+          label="Seus dados"
+          number="03"
+          active={step === 3}
+          complete={bookingComplete}
+        />
       </div>
 
-      {!isBookingComplete && (
+      {!services.length ? (
+        <p className="account-empty-state">
+          Esta barbearia ainda não publicou serviços com profissionais e horários
+          configurados.
+        </p>
+      ) : (
         <>
           <div aria-label="Serviços disponíveis" className="service-grid">
             {services.map((service) => {
@@ -229,10 +250,14 @@ export default function ServicePicker({
                   className={`service-card${isSelected ? " service-card-selected" : ""}`}
                   key={service.id}
                   onClick={() => {
+                    availabilityRequestId.current += 1;
+                    setIsLoadingTimes(false);
                     setSelectedServiceId(service.id);
+                    setSelectedProfessionalId(null);
                     setSelectedDate(null);
                     setSelectedTime(null);
-                    setCustomerDetails(null);
+                    setAvailableTimes([]);
+                    setBookingComplete(false);
                   }}
                   type="button"
                 >
@@ -244,20 +269,10 @@ export default function ServicePicker({
                   </span>
                   <span className="service-name">{service.name}</span>
                   <span className="service-description">
-                    {service.description}
+                    {service.description || "Atendimento profissional."}
                   </span>
                   <span className="service-card-bottom">
                     <span className="service-duration">
-                      <svg
-                        aria-hidden="true"
-                        fill="none"
-                        height="15"
-                        viewBox="0 0 16 16"
-                        width="15"
-                      >
-                        <circle cx="8" cy="8" r="6" />
-                        <path d="M8 4.5V8l2.25 1.5" />
-                      </svg>
                       {service.duration} min
                     </span>
                     <span className="service-price">
@@ -269,214 +284,177 @@ export default function ServicePicker({
             })}
           </div>
 
-          <div aria-live="polite" className="selection-summary">
-            {selectedService ? (
-              <>
-                <div className="summary-copy">
-                  <span className="summary-label">SERVIÇO SELECIONADO</span>
-                  <span className="summary-service">
-                    {selectedService.name}
-                    <span aria-hidden="true"> · </span>
-                    {currencyFormatter.format(selectedService.price)}
-                  </span>
-                  <span className="summary-next">
-                    Escolha uma data e um horário para continuar.
-                  </span>
-                </div>
-                <span aria-hidden="true" className="summary-check">
-                  ✓
-                </span>
-              </>
-            ) : (
-              <p className="selection-hint">
-                Selecione um serviço para começar seu agendamento.
-              </p>
-            )}
-          </div>
-
           {selectedService && (
+            <section aria-labelledby="professional-heading" className="schedule-section">
+              <div className="schedule-heading">
+                <div>
+                  <p className="eyebrow">EQUIPE</p>
+                  <h3 id="professional-heading">Com quem você quer agendar?</h3>
+                </div>
+              </div>
+              <div aria-label="Profissionais disponíveis" className="professional-option-grid">
+                {selectedService.professionals.map((professional) => (
+                  <button
+                    aria-pressed={selectedProfessionalId === professional.id}
+                    className={`professional-option${selectedProfessionalId === professional.id ? " professional-option-selected" : ""}`}
+                    key={professional.id}
+                    onClick={() => {
+                      availabilityRequestId.current += 1;
+                      setIsLoadingTimes(false);
+                      setSelectedProfessionalId(professional.id);
+                      setSelectedDate(null);
+                      setSelectedTime(null);
+                      setAvailableTimes([]);
+                      setBookingComplete(false);
+                    }}
+                    type="button"
+                  >
+                    {professional.displayName}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {selectedProfessional && (
             <section aria-labelledby="date-heading" className="schedule-section">
               <div className="schedule-heading">
                 <div>
                   <p className="eyebrow">AGENDA DA BARBEARIA</p>
                   <h3 id="date-heading">Qual dia funciona para você?</h3>
                 </div>
-                <span className="schedule-timezone">Horário de Brasília</span>
+                <span className="schedule-timezone">
+                  {timezone === "America/Sao_Paulo" ? "Horário de Brasília" : timezone}
+                </span>
               </div>
 
               <div aria-label="Datas disponíveis" className="date-grid">
-                {getAvailableDates().map((date) => {
-                  const isSelected = selectedDate === date.value;
-
-                  return (
-                    <button
-                      aria-pressed={isSelected}
-                      aria-label={date.accessibleLabel}
-                      className={`date-option${isSelected ? " date-option-selected" : ""}`}
-                      key={date.value}
-                      onClick={() => {
-                        setSelectedDate(date.value);
-                        setSelectedTime(null);
-                        setCustomerDetails(null);
-                      }}
-                      type="button"
-                    >
-                      <span>{date.weekday}</span>
-                      <strong>{date.day}</strong>
-                    </button>
-                  );
-                })}
+                {dates.map((date) => (
+                  <button
+                    aria-pressed={selectedDate === date.value}
+                    aria-label={date.accessibleLabel}
+                    className={`date-option${selectedDate === date.value ? " date-option-selected" : ""}`}
+                    key={date.value}
+                    onClick={() => void selectDate(date.value)}
+                    type="button"
+                  >
+                    <span>{date.weekday}</span>
+                    <strong>{date.day}</strong>
+                  </button>
+                ))}
               </div>
 
               {selectedDate && (
                 <div aria-labelledby="time-heading" className="time-section">
                   <h3 id="time-heading">Horários disponíveis</h3>
-                  {selectedDateTimes.length ? (
+                  {isLoadingTimes ? (
+                    <p className="auth-loading">Consultando a agenda...</p>
+                  ) : availabilityError ? (
+                    <p aria-live="polite" className="auth-error" role="alert">
+                      {availabilityError}
+                    </p>
+                  ) : availableTimes.length ? (
                     <div aria-label="Horários disponíveis" className="time-grid">
-                      {selectedDateTimes.map((time) => {
-                        const isSelected = selectedTime === time;
-
-                        return (
-                          <button
-                            aria-pressed={isSelected}
-                            className={`time-option${isSelected ? " time-option-selected" : ""}`}
-                            key={time}
-                            onClick={() => setSelectedTime(time)}
-                            type="button"
-                          >
-                            {time}
-                          </button>
-                        );
-                      })}
+                      {availableTimes.map((time) => (
+                        <button
+                          aria-pressed={selectedTime === time}
+                          className={`time-option${selectedTime === time ? " time-option-selected" : ""}`}
+                          key={time}
+                          onClick={() => {
+                            setSelectedTime(time);
+                            setBookingComplete(false);
+                          }}
+                          type="button"
+                        >
+                          {time}
+                        </button>
+                      ))}
                     </div>
                   ) : (
                     <p className="account-empty-state">
-                      Não há mais horários de demonstração para hoje. Escolha
-                      outra data.
+                      Não há horários disponíveis neste dia. Escolha outra data.
                     </p>
                   )}
                 </div>
               )}
-
-              {selectedDate && selectedTime && !customerDetails && (
-                <div className="schedule-confirmation">
-                  <span>
-                    Horário selecionado:{" "}
-                    <strong>
-                      {new Intl.DateTimeFormat("pt-BR", {
-                        dateStyle: "long",
-                        timeZone: "UTC",
-                      }).format(new Date(`${selectedDate}T12:00:00Z`))}
-                      {" às "}
-                      {selectedTime}
-                    </strong>
-                  </span>
-                  <span className="summary-next">
-                    Confira o horário e preencha seus dados abaixo.
-                  </span>
-                </div>
-              )}
-
               <p className="schedule-disclaimer">
-                Datas e horários de demonstração; ainda não representam a
-                disponibilidade real da barbearia.
+                A disponibilidade é atualizada antes de confirmar o agendamento.
               </p>
             </section>
           )}
 
-          {selectedService && selectedDate && selectedTime && (
+          {selectedService && selectedProfessional && selectedDate && selectedTime && (
             isAuthenticated && customerProfile ? (
               <CustomerDetailsForm
-                date={selectedDate}
+                date={selectedDateOption?.accessibleLabel ?? selectedDate}
+                dateValue={selectedDate}
                 customerEmail={customerProfile.email}
                 customerName={customerProfile.name}
                 customerPhone={customerProfile.phone}
-                onSubmit={setCustomerDetails}
+                onBookingComplete={() => setBookingComplete(true)}
+                onRestart={resetSchedule}
+                professionalName={selectedProfessional.displayName}
+                professionalId={selectedProfessional.id}
+                serviceId={selectedService.id}
                 serviceName={selectedService.name}
+                shopSlug={shopSlug}
                 time={selectedTime}
               />
             ) : (
-              isAuthenticated ? (
-                <p className="auth-error" role="alert">
-                  Não foi possível carregar os dados da sua conta.
+              <section
+                aria-labelledby="booking-login-heading"
+                className="customer-section booking-login-required"
+              >
+                <p className="eyebrow">ENTRE NA SUA CONTA</p>
+                <h3 id="booking-login-heading">Faça login para continuar</h3>
+                <p>
+                  É necessário entrar na sua conta antes de confirmar e registrar
+                  o agendamento.
                 </p>
-              ) : (
-                <section
-                  aria-labelledby="booking-login-heading"
-                  className="customer-section booking-login-required"
+                <Link
+                  className="booking-login-link"
+                  href={`/login?redirectTo=${encodeURIComponent(
+                    `/${shopSlug}?${new URLSearchParams({
+                      service: selectedService.id,
+                      professional: selectedProfessional.id,
+                      date: selectedDate,
+                      time: selectedTime,
+                    }).toString()}`,
+                  )}`}
                 >
-                  <p className="eyebrow">ENTRE NA SUA CONTA</p>
-                  <h3 id="booking-login-heading">
-                    Faça login para continuar
-                  </h3>
-                  <p>
-                    É necessário entrar na sua conta antes de confirmar um
-                    agendamento. Nenhum horário será confirmado sem login.
-                  </p>
-                  <Link className="booking-login-link" href="/login">
-                    Entrar
-                  </Link>
-                </section>
-              )
+                  Entrar
+                </Link>
+              </section>
             )
           )}
         </>
       )}
 
-      {customerDetails && selectedService && selectedDate && selectedTime && (
-        <section
-          aria-live="polite"
-          aria-labelledby="booking-complete-heading"
-          className="customer-section booking-complete"
-        >
-          <span aria-hidden="true" className="booking-complete-icon">
-            ✓
-          </span>
-          <p className="eyebrow">FLUXO DE DEMONSTRAÇÃO</p>
-          <h3 id="booking-complete-heading">
-            Obrigado{greetingName ? `, ${greetingName}` : ""}!
-          </h3>
-          <p className="booking-complete-message">
-            Esta tela é apenas uma demonstração. O agendamento não foi
-            confirmado.
-          </p>
-          <dl className="booking-complete-details">
-            <div>
-              <dt>Serviço</dt>
-              <dd>{selectedService.name}</dd>
-            </div>
-            <div>
-              <dt>Data</dt>
-              <dd>
-                {new Intl.DateTimeFormat("pt-BR", {
-                  dateStyle: "long",
-                  timeZone: "UTC",
-                }).format(new Date(`${selectedDate}T12:00:00Z`))}
-              </dd>
-            </div>
-            <div>
-              <dt>Horário</dt>
-              <dd>{selectedTime}</dd>
-            </div>
-          </dl>
-          <p className="booking-complete-notice">
-            Seu telefone foi salvo na sua conta. Nenhum agendamento foi
-            registrado.
-          </p>
-          <button
-            className="booking-restart"
-            onClick={() => {
-              setCustomerDetails(null);
-              setSelectedServiceId(null);
-              setSelectedDate(null);
-              setSelectedTime(null);
-            }}
-            type="button"
-          >
-            Começar outro agendamento
-          </button>
-        </section>
-      )}
+      <p className="sr-only" aria-live="polite">
+        {selectedDateOption ? `${selectedDateOption.accessibleLabel}, ${selectedTime ?? ""}` : ""}
+      </p>
     </>
+  );
+}
+
+function Step({
+  label,
+  number,
+  active,
+  complete,
+}: {
+  label: string;
+  number: string;
+  active: boolean;
+  complete: boolean;
+}) {
+  return (
+    <div
+      aria-current={active ? "step" : undefined}
+      className={`step${complete ? " step-complete" : active ? " step-active" : ""}`}
+    >
+      <span className="step-number">{complete ? "✓" : number}</span>
+      <span>{label}</span>
+    </div>
   );
 }

@@ -50,6 +50,9 @@ export async function getManagerDashboard(shopId?: string) {
       metrics: null,
       upcomingBookings: [],
       managers: [],
+      professionals: [],
+      services: [],
+      weeklyAvailability: [],
     };
   }
 
@@ -71,6 +74,9 @@ export async function getManagerDashboard(shopId?: string) {
     paidRevenue,
     upcomingBookings,
     managers,
+    team,
+    configuredServices,
+    weeklyAvailability,
   ] =
     await Promise.all([
       prisma.professional.count({
@@ -116,6 +122,43 @@ export async function getManagerDashboard(shopId?: string) {
           user: { select: { name: true, email: true } },
         },
       }),
+      prisma.professional.findMany({
+        where: { shopId: shop.id },
+        orderBy: { displayName: "asc" },
+        select: {
+          id: true,
+          displayName: true,
+          isActive: true,
+          membership: {
+            select: { user: { select: { name: true, email: true } } },
+          },
+        },
+      }),
+      prisma.service.findMany({
+        where: { shopId: shop.id },
+        orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          durationMinutes: true,
+          price: true,
+          isActive: true,
+          professionals: {
+            select: { professional: { select: { id: true, displayName: true } } },
+          },
+        },
+      }),
+      prisma.weeklyAvailability.findMany({
+        where: { shopId: shop.id },
+        orderBy: [{ weekday: "asc" }, { startMinute: "asc" }],
+        select: {
+          id: true,
+          weekday: true,
+          startMinute: true,
+          endMinute: true,
+          professional: { select: { displayName: true } },
+        },
+      }),
     ]);
 
   return {
@@ -143,6 +186,21 @@ export async function getManagerDashboard(shopId?: string) {
             email: user.email,
           }))
         : [],
+    professionals: team.map(({ membership, ...professional }) => ({
+      ...professional,
+      userName: membership.user.name,
+      userEmail: membership.user.email,
+    })),
+    services: configuredServices.map(
+      ({ professionals: serviceProfessionals, price, ...service }) => ({
+        ...service,
+        price: price.toString(),
+        professionals: serviceProfessionals.map(
+          ({ professional }) => professional,
+        ),
+      }),
+    ),
+    weeklyAvailability,
   };
 }
 

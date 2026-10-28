@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export default function EmailSignInForm() {
+export default function EmailSignInForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export default function EmailSignInForm() {
         return;
       }
 
-      router.replace("/dashboard");
+      router.replace(redirectTo);
       router.refresh();
     } catch {
       setErrorMessage("Não foi possível entrar. Tente novamente.");

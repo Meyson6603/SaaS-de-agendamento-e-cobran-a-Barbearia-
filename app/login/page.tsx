@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getSession } from "@/lib/auth-session";
+import { getSafeRedirectTo } from "@/lib/redirect-url";
 import EmailSignInForm from "./email-sign-in-form";
 import GoogleSignInButton from "./sign-in-button";
 
@@ -11,19 +12,25 @@ export const metadata: Metadata = {
   description: "Entre na sua conta para acessar o sistema de agendamentos.",
 };
 
-export default function LoginPage() {
+export default function LoginPage(props: PageProps<"/login">) {
   return (
     <Suspense fallback={<p className="auth-loading">Carregando acesso...</p>}>
-      <LoginContent />
+      <LoginContent searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
-async function LoginContent() {
+async function LoginContent({
+  searchParams,
+}: {
+  searchParams: PageProps<"/login">["searchParams"];
+}) {
+  const search = await searchParams;
+  const redirectTo = getSafeRedirectTo(search.redirectTo);
   const session = await getSession();
 
   if (session) {
-    redirect("/dashboard");
+    redirect(redirectTo);
   }
 
   const googleConfigured = Boolean(
@@ -49,13 +56,13 @@ async function LoginContent() {
           Acesse sua agenda e acompanhe seus agendamentos.
         </p>
 
-        <EmailSignInForm />
+        <EmailSignInForm redirectTo={redirectTo} />
 
         <div aria-hidden="true" className="auth-divider auth-divider-social">
           <span>ou entre com Google</span>
         </div>
 
-        <GoogleSignInButton enabled={googleConfigured} />
+        <GoogleSignInButton enabled={googleConfigured} redirectTo={redirectTo} />
 
         {!googleConfigured && (
           <p className="auth-setup-notice">
@@ -65,7 +72,10 @@ async function LoginContent() {
         )}
 
         <p className="auth-switch">
-          Ainda não tem conta? <Link href="/cadastro">Cadastre-se</Link>
+          Ainda não tem conta?{" "}
+          <Link href={`/cadastro?redirectTo=${encodeURIComponent(redirectTo)}`}>
+            Cadastre-se
+          </Link>
         </p>
 
         <Link className="auth-back-link" href="/">

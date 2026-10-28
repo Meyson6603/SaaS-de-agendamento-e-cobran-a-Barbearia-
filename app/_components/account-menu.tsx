@@ -6,9 +6,15 @@ import SignOutButton from "@/app/dashboard/sign-out-button";
 
 type AccountMenuProps = {
   name: string;
+  isPlatformAdmin: boolean;
+  hasProfessionalAccess: boolean;
 };
 
-export default function AccountMenu({ name }: AccountMenuProps) {
+export default function AccountMenu({
+  name,
+  isPlatformAdmin,
+  hasProfessionalAccess,
+}: AccountMenuProps) {
   const displayName = name.trim() || "Minha conta";
   const menuRef = useRef<HTMLDetailsElement>(null);
 
@@ -65,6 +71,12 @@ export default function AccountMenu({ name }: AccountMenuProps) {
         <Link href="/dashboard#historico">Histórico de cortes</Link>
         <Link href="/dashboard#pagamentos">Pagamentos</Link>
         <Link href="/gerencia">Painel da barbearia</Link>
+        {isPlatformAdmin && (
+          <Link href="/profissional">Agendas profissionais</Link>
+        )}
+        {hasProfessionalAccess && (
+          <Link href="/profissional">Minha agenda profissional</Link>
+        )}
         <div className="account-menu-divider" />
         <SignOutButton />
       </nav>

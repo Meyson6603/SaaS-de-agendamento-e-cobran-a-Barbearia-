@@ -35,6 +35,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - O login com Google é a primeira opção planejada para barbearias e clientes; outros provedores poderão ser avaliados depois.
 - O cadastro e o login por e-mail e senha também estão disponíveis; senhas precisam ter entre 8 e 128 caracteres e são confirmadas no cadastro.
 - O envio de e-mails de verificação e de recuperação de senha ainda não está configurado.
+- Profissionais vinculados a uma conta podem consultar em `/profissional` os próprios agendamentos confirmados e os dados de contato necessários dos clientes.
 - No fluxo do cliente, o login será solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
 - O fluxo demonstrativo exige login antes de exibir a etapa final, mas ainda não cria nem salva agendamentos.
@@ -176,7 +177,9 @@ O painel apresenta indicadores agregados e listas de barbearias e usuários. Na 
 
 O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários ou administradores podem adicionar contas existentes e verificadas como `MANAGER`. Convites por e-mail ainda não estão configurados.
 
-O painel mostra indicadores e próximos atendimentos. O cadastro de equipe, serviços, disponibilidade e edição dos dados da barbearia será implementado nas próximas etapas. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
+O painel mostra indicadores, próximos atendimentos e permite consultar e adicionar gerentes. O cadastro de equipe, serviços, disponibilidade e edição dos dados da barbearia será implementado nas próximas etapas. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
+
+Profissionais com vínculo `PROFESSIONAL` e perfil associado podem acessar `/profissional` para consultar, com paginação, os agendamentos confirmados em andamento ou futuros dos próprios perfis profissionais e os dados de contato dos clientes. Administradores da plataforma também podem acessar a página e selecionar qualquer perfil profissional. O acesso é validado no servidor; usuários sem perfil profissional associado recebem uma orientação para solicitar o vínculo ao proprietário ou gerente.
 
 ### Comandos disponíveis
 

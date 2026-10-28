@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import AdminShell from "./admin-shell";
 import { requirePlatformAdmin } from "@/lib/platform-admin";
 
+export const instant = false;
+
 export default function AdminLayout({
   children,
 }: LayoutProps<"/admin">) {

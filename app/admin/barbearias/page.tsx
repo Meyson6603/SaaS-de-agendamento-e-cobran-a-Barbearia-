@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getAdminBarbershops } from "@/lib/admin-data";
+import BarbershopCreateForm from "../barbershop-create-form";
 
 export const metadata = {
   title: "Barbearias | Administração Navalha",
@@ -31,6 +32,8 @@ async function AdminBarbershopsContent() {
           </p>
         </div>
       </div>
+
+      <BarbershopCreateForm />
 
       <section aria-label="Lista de barbearias" className="admin-panel">
         {barbershops.length ? (
@@ -85,8 +88,8 @@ async function AdminBarbershopsContent() {
         )}
       </section>
       <p className="admin-notice">
-        Esta listagem é somente para consulta. Ações de edição, suspensão e
-        exclusão não estão disponíveis nesta etapa.
+        O primeiro acesso OWNER é atribuído no cadastro. Edição, suspensão e
+        exclusão de barbearias ainda não estão disponíveis.
       </p>
     </>
   );

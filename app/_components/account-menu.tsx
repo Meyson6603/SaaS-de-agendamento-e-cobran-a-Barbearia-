@@ -64,6 +64,7 @@ export default function AccountMenu({ name }: AccountMenuProps) {
         <Link href="/dashboard#agenda">Próximos horários</Link>
         <Link href="/dashboard#historico">Histórico de cortes</Link>
         <Link href="/dashboard#pagamentos">Pagamentos</Link>
+        <Link href="/gerencia">Painel da barbearia</Link>
         <div className="account-menu-divider" />
         <SignOutButton />
       </nav>

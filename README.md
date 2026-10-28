@@ -166,6 +166,12 @@ O esquema inicial fica em `prisma/schema.prisma`. `npm run db:migrate` precisa d
 
 O arquivo `.env.example` lista todas as variáveis esperadas. Nunca compartilhe nem versione segredos ou credenciais OAuth.
 
+### Administração da plataforma
+
+O painel global fica em `/admin` e exige uma sessão autenticada com e-mail verificado listado em `PLATFORM_ADMIN_EMAILS`. Configure um ou mais endereços no `.env`, separados por vírgula. Essa allowlist é diferente dos papéis de proprietário e gerente de uma barbearia.
+
+O painel apresenta indicadores agregados e listas de barbearias e usuários. Nesta etapa, as listas são somente para consulta; não há ações de edição, suspensão ou exclusão. A tela de configurações exibe apenas o estado de configuração, nunca valores secretos.
+
 ### Comandos disponíveis
 
 ```bash

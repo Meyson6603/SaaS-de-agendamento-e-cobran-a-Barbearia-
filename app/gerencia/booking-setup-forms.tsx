@@ -3,8 +3,10 @@
 import { useActionState } from "react";
 import {
   addWeeklyAvailability,
+  createAvailabilityBlock,
   createProfessional,
   createShopService,
+  removeAvailabilityBlock,
   removeWeeklyAvailability,
   toggleProfessionalStatus,
   toggleShopService,
@@ -39,6 +41,14 @@ type AvailabilityOption = {
   professional: { displayName: string };
 };
 
+type AvailabilityBlockOption = {
+  id: string;
+  startsAt: string | Date;
+  endsAt: string | Date;
+  reason: string | null;
+  professional: { displayName: string };
+};
+
 const initialState: BarbershopSetupState = { error: null, success: null };
 const weekdayOptions = [
   ["MONDAY", "Segunda-feira"],
@@ -60,11 +70,15 @@ export default function BookingSetupForms({
   professionals,
   services,
   weeklyAvailability,
+  availabilityBlocks,
+  timezone,
 }: {
   shopId: string;
   professionals: ProfessionalOption[];
   services: ServiceOption[];
   weeklyAvailability: AvailabilityOption[];
+  availabilityBlocks: AvailabilityBlockOption[];
+  timezone: string;
 }) {
   const [professionalState, professionalAction, professionalPending] =
     useActionState(createProfessional, initialState);
@@ -74,6 +88,10 @@ export default function BookingSetupForms({
   );
   const [availabilityState, availabilityAction, availabilityPending] =
     useActionState(addWeeklyAvailability, initialState);
+  const [blockState, blockAction, blockPending] = useActionState(
+    createAvailabilityBlock,
+    initialState,
+  );
   const activeProfessionals = professionals.filter(({ isActive }) => isActive);
 
   return (
@@ -310,6 +328,77 @@ export default function BookingSetupForms({
             <ActionFeedback state={availabilityState} />
           </form>
         </div>
+
+        <div className="booking-setup-block">
+          <h3>Bloqueios pontuais</h3>
+          {availabilityBlocks.length ? (
+            <ul className="booking-config-list">
+              {availabilityBlocks.map((block) => (
+                <li key={block.id}>
+                  <div>
+                    <strong>{formatBlockPeriod(block, timezone)}</strong>
+                    <span>{block.professional.displayName}</span>
+                    {block.reason && <span>{block.reason}</span>}
+                  </div>
+                  <BlockRemovalForm block={block} shopId={shopId} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="manager-empty">Nenhum bloqueio pontual cadastrado.</p>
+          )}
+          <form action={blockAction} className="manager-team-form">
+            <input name="shopId" type="hidden" value={shopId} />
+            <div className="manager-form-field">
+              <label htmlFor="block-professional">Profissional</label>
+              <select
+                disabled={!activeProfessionals.length}
+                id="block-professional"
+                name="professionalId"
+                required
+              >
+                <option value="">Selecione</option>
+                {activeProfessionals.map((professional) => (
+                  <option key={professional.id} value={professional.id}>
+                    {professional.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="manager-form-field">
+              <label htmlFor="block-date">Data</label>
+              <input id="block-date" name="date" required type="date" />
+            </div>
+            <div className="booking-inline-fields">
+              <div className="manager-form-field">
+                <label htmlFor="block-start">Das</label>
+                <input id="block-start" name="startTime" required type="time" />
+              </div>
+              <div className="manager-form-field">
+                <label htmlFor="block-end">Até</label>
+                <input id="block-end" name="endTime" required type="time" />
+              </div>
+            </div>
+            <div className="manager-form-field">
+              <label htmlFor="block-reason">
+                Motivo <span>(opcional, até 200 caracteres)</span>
+              </label>
+              <input id="block-reason" maxLength={200} name="reason" />
+            </div>
+            <button
+              className="auth-submit"
+              disabled={blockPending || !activeProfessionals.length}
+              type="submit"
+            >
+              {blockPending ? "Salvando..." : "Adicionar bloqueio"}
+            </button>
+            <p className="manager-field-help">
+              Os horários são exibidos no fuso {timezone}. Reservas existentes não
+              são canceladas automaticamente.
+            </p>
+            <ActionFeedback state={blockState} />
+          </form>
+        </div>
       </div>
     </section>
   );
@@ -333,6 +422,39 @@ function ActionFeedback({ state }: { state: BarbershopSetupState }) {
   }
 
   return null;
+}
+
+function BlockRemovalForm({
+  block,
+  shopId,
+}: {
+  block: AvailabilityBlockOption;
+  shopId: string;
+}) {
+  const [state, action, pending] = useActionState(
+    removeAvailabilityBlock,
+    initialState,
+  );
+
+  return (
+    <form action={action} className="booking-block-removal">
+      <input name="shopId" type="hidden" value={shopId} />
+      <input name="exceptionId" type="hidden" value={block.id} />
+      <button className="manager-secondary-action" disabled={pending} type="submit">
+        {pending ? "Removendo..." : "Remover"}
+      </button>
+      <ActionFeedback state={state} />
+    </form>
+  );
+}
+
+function formatBlockPeriod(block: AvailabilityBlockOption, timezone: string) {
+  const formatter = new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: timezone,
+  });
+  return `${formatter.format(new Date(block.startsAt))}–${formatter.format(new Date(block.endsAt))}`;
 }
 
 function ProfessionalEditor({

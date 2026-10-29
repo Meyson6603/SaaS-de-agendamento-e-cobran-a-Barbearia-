@@ -16,6 +16,7 @@ export async function getManagerDashboard(shopId?: string) {
           name: true,
           slug: true,
           phone: true,
+          timezone: true,
           createdAt: true,
         },
       }).then((shops) =>
@@ -35,6 +36,7 @@ export async function getManagerDashboard(shopId?: string) {
               name: true,
               slug: true,
               phone: true,
+              timezone: true,
               createdAt: true,
             },
           },
@@ -53,6 +55,7 @@ export async function getManagerDashboard(shopId?: string) {
       professionals: [],
       services: [],
       weeklyAvailability: [],
+      availabilityBlocks: [],
     };
   }
 
@@ -77,6 +80,7 @@ export async function getManagerDashboard(shopId?: string) {
     team,
     configuredServices,
     weeklyAvailability,
+    availabilityBlocks,
   ] =
     await Promise.all([
       prisma.professional.count({
@@ -164,6 +168,17 @@ export async function getManagerDashboard(shopId?: string) {
           professional: { select: { displayName: true } },
         },
       }),
+      prisma.availabilityException.findMany({
+        where: { shopId: shop.id, type: "BLOCKED", endsAt: { gte: now } },
+        orderBy: { startsAt: "asc" },
+        select: {
+          id: true,
+          startsAt: true,
+          endsAt: true,
+          reason: true,
+          professional: { select: { displayName: true } },
+        },
+      }),
     ]);
 
   return {
@@ -206,6 +221,7 @@ export async function getManagerDashboard(shopId?: string) {
       }),
     ),
     weeklyAvailability,
+    availabilityBlocks,
   };
 }
 

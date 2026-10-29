@@ -68,6 +68,7 @@ async function ManagerDashboard({
     professionals,
     services,
     weeklyAvailability,
+    availabilityBlocks,
   } = dashboard;
   const formattedRevenue = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -123,6 +124,8 @@ async function ManagerDashboard({
         professionals={professionals}
         services={services}
         weeklyAvailability={weeklyAvailability}
+        availabilityBlocks={availabilityBlocks}
+        timezone={selectedShop.timezone}
       />
 
       <section aria-labelledby="manager-bookings-title" className="manager-panel">

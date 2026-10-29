@@ -307,7 +307,7 @@ function getLocalDateParts(date: Date, timezone: string) {
   };
 }
 
-function zonedDateTimeToDate(date: string, minutes: number, timezone: string) {
+export function zonedDateTimeToDate(date: string, minutes: number, timezone: string) {
   const parsedDate = parseDate(date);
   if (!parsedDate) {
     return null;

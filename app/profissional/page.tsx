@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { formatBrazilianPhone } from "@/lib/brazilian-phone";
 import { getProfessionalDashboard } from "@/lib/professional-data";
+import PaymentManagementActions from "@/app/_components/payment-management-actions";
 
 export const metadata: Metadata = {
   title: "Minha agenda | Navalha",
@@ -180,6 +181,11 @@ async function ProfessionalDashboard({
                       Observação: {booking.customerNote}
                     </p>
                   )}
+                  <PaymentManagementActions
+                    bookingId={booking.id}
+                    paymentMethod={booking.payment?.method ?? null}
+                    paymentStatus={booking.payment?.status ?? "PENDING"}
+                  />
                 </div>
               </article>
             ))}

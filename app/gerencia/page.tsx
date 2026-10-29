@@ -3,6 +3,7 @@ import Link from "next/link";
 import BookingSetupForms from "./booking-setup-forms";
 import ManagerTeamForm from "./manager-team-form";
 import BookingManagementActions from "@/app/_components/booking-management-actions";
+import PaymentManagementActions from "@/app/_components/payment-management-actions";
 import { getBookingDates } from "@/lib/booking-availability";
 import { getManagerDashboard } from "@/lib/manager-data";
 
@@ -155,6 +156,11 @@ async function ManagerDashboard({
                     dates={rescheduleDates}
                     currentStartAt={booking.startsAt.toISOString()}
                     timezone={selectedShop.timezone}
+                  />
+                  <PaymentManagementActions
+                    bookingId={booking.id}
+                    paymentMethod={booking.payment?.method ?? null}
+                    paymentStatus={booking.payment?.status ?? "PENDING"}
                   />
                 </div>
               </article>

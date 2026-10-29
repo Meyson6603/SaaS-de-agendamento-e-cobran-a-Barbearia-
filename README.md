@@ -62,6 +62,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - Depois de selecionar serviço, profissional, data e horário, o cliente entra com sua conta antes de confirmar.
 - A confirmação valida novamente a disponibilidade dentro de uma transação serializável para evitar reservas duplicadas.
 - O painel permite registrar o pagamento do atendimento, inclusive quando recebido presencialmente.
+- O proprietário, gerente ou profissional responsável pode registrar pagamentos presenciais como PIX, dinheiro ou cartão; o valor usa o snapshot do serviço no momento do agendamento.
 - Clientes, proprietários, gerentes e administradores podem cancelar ou remarcar agendamentos futuros até o início do atendimento.
 - Cancelamentos e remarcações revalidam a disponibilidade no servidor e registram eventos no histórico do agendamento.
 

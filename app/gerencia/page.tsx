@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import BookingSetupForms from "./booking-setup-forms";
 import ManagerTeamForm from "./manager-team-form";
+import BookingManagementActions from "@/app/_components/booking-management-actions";
+import { getBookingDates } from "@/lib/booking-availability";
 import { getManagerDashboard } from "@/lib/manager-data";
 
 export const metadata = {
@@ -76,6 +78,7 @@ async function ManagerDashboard({
   }).format(Number(metrics.paidRevenue));
   const isPublicBookingConfigured =
     metrics.professionals > 0 && metrics.services > 0 && weeklyAvailability.length > 0;
+  const rescheduleDates = getBookingDates(selectedShop.timezone);
 
   return (
     <>
@@ -141,12 +144,18 @@ async function ManagerDashboard({
             {upcomingBookings.map((booking) => (
               <article className="manager-booking" key={booking.id}>
                 <time dateTime={booking.startsAt.toISOString()}>
-                  {formatBookingDate(booking.startsAt)}
+                  {formatBookingDate(booking.startsAt, selectedShop.timezone)}
                 </time>
                 <div>
                   <strong>{booking.serviceNameSnapshot}</strong>
                   <span>{booking.customer.name}</span>
                   <span>Com {booking.professional.displayName}</span>
+                  <BookingManagementActions
+                    bookingId={booking.id}
+                    dates={rescheduleDates}
+                    currentStartAt={booking.startsAt.toISOString()}
+                    timezone={selectedShop.timezone}
+                  />
                 </div>
               </article>
             ))}
@@ -228,10 +237,10 @@ function ManagerMetric({
   );
 }
 
-function formatBookingDate(date: Date) {
+function formatBookingDate(date: Date, timezone: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "medium",
     timeStyle: "short",
-    timeZone: "America/Sao_Paulo",
+    timeZone: timezone,
   }).format(date);
 }

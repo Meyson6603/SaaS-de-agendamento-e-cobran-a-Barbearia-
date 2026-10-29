@@ -57,12 +57,16 @@ export async function getAvailableBookingTimes({
   professionalId,
   date,
   timezone,
+  excludeBookingId,
+  durationMinutes,
 }: {
   shopId: string;
   serviceId: string;
   professionalId: string;
   date: string;
   timezone: string;
+  excludeBookingId?: string;
+  durationMinutes?: number;
 }) {
   const dateParts = parseDate(date);
   if (!dateParts || !isWithinBookingWindow(date, timezone)) {
@@ -104,6 +108,7 @@ export async function getAvailableBookingTimes({
         shopId,
         professionalId,
         status: "CONFIRMED",
+        id: excludeBookingId ? { not: excludeBookingId } : undefined,
         startsAt: { lt: dayEnd },
         endsAt: { gt: dayStart },
       },
@@ -125,9 +130,14 @@ export async function getAvailableBookingTimes({
     select: { durationMinutes: true },
   });
 
-  if (!service) {
+  if (
+    !service ||
+    (durationMinutes !== undefined &&
+      (!Number.isInteger(durationMinutes) || durationMinutes < 1))
+  ) {
     return [];
   }
+  const slotDurationMinutes = durationMinutes ?? service.durationMinutes;
 
   const now = new Date();
   const availableMinutes = new Set<number>();
@@ -135,7 +145,7 @@ export async function getAvailableBookingTimes({
   for (const interval of assignment.professional.weeklyAvailability) {
     for (
       let startMinute = interval.startMinute;
-      startMinute + service.durationMinutes <= interval.endMinute;
+      startMinute + slotDurationMinutes <= interval.endMinute;
       startMinute += SLOT_INTERVAL_MINUTES
     ) {
       const start = zonedDateTimeToDate(date, startMinute, timezone);
@@ -143,7 +153,7 @@ export async function getAvailableBookingTimes({
         continue;
       }
 
-      const end = new Date(start.getTime() + service.durationMinutes * 60_000);
+      const end = new Date(start.getTime() + slotDurationMinutes * 60_000);
       const conflicts = [...bookings, ...blockedPeriods].some(
         (period) => start < period.endsAt && end > period.startsAt,
       );
@@ -168,6 +178,8 @@ export async function isBookingSlotAvailable({
   startsAt,
   endsAt,
   timezone,
+  excludeBookingId,
+  durationMinutes,
   db = prisma,
 }: {
   shopId: string;
@@ -176,6 +188,8 @@ export async function isBookingSlotAvailable({
   startsAt: Date;
   endsAt: Date;
   timezone: string;
+  excludeBookingId?: string;
+  durationMinutes?: number;
   db?: Prisma.TransactionClient;
 }) {
   const localStart = getLocalDateParts(startsAt, timezone);
@@ -223,7 +237,11 @@ export async function isBookingSlotAvailable({
 
   if (
     !assignment ||
-    assignment.service.durationMinutes !== (endsAt.getTime() - startsAt.getTime()) / 60_000 ||
+    (durationMinutes === undefined &&
+      assignment.service.durationMinutes !==
+        (endsAt.getTime() - startsAt.getTime()) / 60_000) ||
+    (durationMinutes !== undefined &&
+      durationMinutes !== (endsAt.getTime() - startsAt.getTime()) / 60_000) ||
     assignment.professional.weeklyAvailability.length === 0
   ) {
     return false;
@@ -235,6 +253,7 @@ export async function isBookingSlotAvailable({
         shopId,
         professionalId,
         status: "CONFIRMED",
+        id: excludeBookingId ? { not: excludeBookingId } : undefined,
         startsAt: { lt: endsAt },
         endsAt: { gt: startsAt },
       },

@@ -5,6 +5,8 @@ import SignOutButton from "./sign-out-button";
 import { requireSession } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
 import EditProfileForm from "./edit-profile-form";
+import BookingManagementActions from "@/app/_components/booking-management-actions";
+import { getBookingDates } from "@/lib/booking-availability";
 
 export const metadata: Metadata = {
   title: "Painel | Navalha Barbearia",
@@ -22,7 +24,7 @@ export default function DashboardPage() {
 async function DashboardContent() {
   const session = await requireSession();
   const now = new Date();
-  const [upcomingBookings, bookingHistory, payments] = await Promise.all([
+  const [upcomingBookings, bookingHistory, cancelledBookings, payments] = await Promise.all([
     prisma.booking.findMany({
       where: {
         customerId: session.user.id,
@@ -31,7 +33,7 @@ async function DashboardContent() {
       },
       orderBy: { startsAt: "asc" },
       include: {
-        shop: { select: { name: true } },
+        shop: { select: { name: true, timezone: true } },
         professional: { select: { displayName: true } },
       },
     }),
@@ -43,7 +45,16 @@ async function DashboardContent() {
       },
       orderBy: { startsAt: "desc" },
       include: {
-        shop: { select: { name: true } },
+        shop: { select: { name: true, timezone: true } },
+        professional: { select: { displayName: true } },
+      },
+    }),
+    prisma.booking.findMany({
+      where: { customerId: session.user.id, status: "CANCELLED" },
+      take: 20,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        shop: { select: { name: true, timezone: true } },
         professional: { select: { displayName: true } },
       },
     }),
@@ -118,9 +129,17 @@ async function DashboardContent() {
                     <span>{booking.shop.name}</span>
                     <span>Com {booking.professional.displayName}</span>
                   </div>
-                  <time dateTime={booking.startsAt.toISOString()}>
-                    {formatBookingDate(booking.startsAt)}
-                  </time>
+                  <div className="account-record-actions">
+                    <time dateTime={booking.startsAt.toISOString()}>
+                      {formatBookingDate(booking.startsAt, booking.shop.timezone)}
+                    </time>
+                    <BookingManagementActions
+                      bookingId={booking.id}
+                      dates={getBookingDates(booking.shop.timezone)}
+                      currentStartAt={booking.startsAt.toISOString()}
+                      timezone={booking.shop.timezone}
+                    />
+                  </div>
                 </article>
               ))}
             </div>
@@ -129,6 +148,36 @@ async function DashboardContent() {
               Você ainda não tem horários agendados. Quando confirmar um
               agendamento, ele aparecerá aqui.
             </p>
+          )}
+        </section>
+
+        <section aria-labelledby="cancelled-title" className="dashboard-section" id="cancelamentos">
+          <div className="dashboard-section-heading">
+            <div>
+              <p className="eyebrow">AGENDAMENTOS CANCELADOS</p>
+              <h2 id="cancelled-title">Cancelamentos</h2>
+            </div>
+          </div>
+          {cancelledBookings.length ? (
+            <div className="account-record-list">
+              {cancelledBookings.map((booking) => (
+                <article className="account-record account-record-cancelled" key={booking.id}>
+                  <div>
+                    <strong>{booking.serviceNameSnapshot}</strong>
+                    <span>{booking.shop.name}</span>
+                    <span>Com {booking.professional.displayName}</span>
+                  </div>
+                  <div className="account-record-actions">
+                    <time dateTime={booking.startsAt.toISOString()}>
+                      {formatBookingDate(booking.startsAt, booking.shop.timezone)}
+                    </time>
+                    <span>Cancelado em {formatBookingDate(booking.updatedAt, booking.shop.timezone)}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="account-empty-state">Seus agendamentos cancelados aparecerão aqui.</p>
           )}
         </section>
 
@@ -153,7 +202,7 @@ async function DashboardContent() {
                     <span>Com {booking.professional.displayName}</span>
                   </div>
                   <time dateTime={booking.startsAt.toISOString()}>
-                    {formatBookingDate(booking.startsAt)}
+                    {formatBookingDate(booking.startsAt, booking.shop.timezone)}
                   </time>
                 </article>
               ))}
@@ -203,11 +252,11 @@ async function DashboardContent() {
   );
 }
 
-function formatBookingDate(date: Date) {
+function formatBookingDate(date: Date, timezone: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "long",
     timeStyle: "short",
-    timeZone: "America/Sao_Paulo",
+    timeZone: timezone,
   }).format(date);
 }
 

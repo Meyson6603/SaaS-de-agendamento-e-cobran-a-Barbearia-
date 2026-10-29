@@ -35,6 +35,11 @@ enum BookingStatus {
   NO_SHOW
 }
 
+enum BookingEventType {
+  CANCELLED
+  RESCHEDULED
+}
+
 enum PaymentMethod {
   PIX
   CASH
@@ -63,6 +68,7 @@ model User {
   sessions    Session[]
   memberships Membership[]
   bookings    Booking[] @relation("BookingCustomer")
+  bookingEvents BookingEvent[] @relation("BookingEventActor")
 }
 
 model Account {
@@ -248,6 +254,7 @@ model Booking {
   service      Service      @relation(fields: [shopId, serviceId], references: [shopId, id], onDelete: Restrict)
   customer     User         @relation("BookingCustomer", fields: [customerId], references: [id], onDelete: Restrict)
   payment      Payment?
+  events       BookingEvent[]
 
   @@index([shopId, startsAt])
   @@index([shopId, status, startsAt])
@@ -266,4 +273,22 @@ model Payment {
   updatedAt DateTime       @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+}
+
+model BookingEvent {
+  id               String           @id @default(cuid())
+  bookingId        String
+  actorId          String
+  type             BookingEventType
+  previousStartsAt DateTime?        @db.Timestamptz(3)
+  previousEndsAt   DateTime?        @db.Timestamptz(3)
+  newStartsAt      DateTime?        @db.Timestamptz(3)
+  newEndsAt        DateTime?        @db.Timestamptz(3)
+  createdAt        DateTime         @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  actor   User    @relation("BookingEventActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([bookingId, createdAt])
+  @@index([actorId, createdAt])
 }

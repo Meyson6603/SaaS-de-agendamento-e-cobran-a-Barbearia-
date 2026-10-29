@@ -62,6 +62,8 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - Depois de selecionar serviço, profissional, data e horário, o cliente entra com sua conta antes de confirmar.
 - A confirmação valida novamente a disponibilidade dentro de uma transação serializável para evitar reservas duplicadas.
 - O painel permite registrar o pagamento do atendimento, inclusive quando recebido presencialmente.
+- Clientes, proprietários, gerentes e administradores podem cancelar ou remarcar agendamentos futuros até o início do atendimento.
+- Cancelamentos e remarcações revalidam a disponibilidade no servidor e registram eventos no histórico do agendamento.
 
 Regras detalhadas de cancelamento, exceções de horário, notificações e pagamentos ainda precisam ser definidas.
 
@@ -210,4 +212,4 @@ O fluxo público de agendamento consulta serviços e disponibilidade real, exige
 
 Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A validação de formato não confirma que a linha existe ou pertence ao cliente; isso exigirá OTP por SMS ou WhatsApp. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
 
-Ainda precisam ser implementados: cancelamento e remarcação de agendamentos, notificações e integrações de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. A confirmação de telefone também depende de uma futura integração de verificação por SMS ou WhatsApp.
+Ainda precisam ser implementados: notificações e integrações de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. A confirmação de telefone também depende de uma futura integração de verificação por SMS ou WhatsApp. O cancelamento não altera nem reembolsa pagamentos automaticamente.

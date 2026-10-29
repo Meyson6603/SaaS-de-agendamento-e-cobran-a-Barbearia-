@@ -113,6 +113,7 @@ export async function getManagerDashboard(shopId?: string) {
           id: true,
           startsAt: true,
           serviceNameSnapshot: true,
+          payment: { select: { status: true, method: true } },
           customer: { select: { name: true } },
           professional: { select: { displayName: true } },
         },

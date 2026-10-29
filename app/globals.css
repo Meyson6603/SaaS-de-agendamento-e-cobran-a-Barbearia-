@@ -2314,6 +2314,63 @@ a {
   font-size: 11px;
 }
 
+.payment-management-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.payment-management-form select,
+.payment-management-form button {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 10px;
+}
+
+.payment-management-form select {
+  padding: 0 7px;
+}
+
+.payment-management-form button {
+  padding: 0 9px;
+  background: var(--accent-dark);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.payment-management-form button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.payment-management-form .form-error,
+.payment-management-form .form-success {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 10px;
+}
+
+.payment-management-form .form-error {
+  color: #a33d2f;
+}
+
+.payment-management-form .form-success,
+.payment-management-status {
+  color: #47704a;
+  font-size: 10px;
+}
+
+.payment-management-status {
+  display: block;
+  margin-top: 6px;
+}
+
 .manager-empty {
   margin: 0;
   padding: 13px 0 2px;
@@ -2611,6 +2668,10 @@ a {
   width: fit-content;
   text-decoration-color: #b7b0a5;
   text-underline-offset: 3px;
+}
+
+.professional-booking-details .payment-management-form {
+  margin-top: 4px;
 }
 
 .professional-booking-note {

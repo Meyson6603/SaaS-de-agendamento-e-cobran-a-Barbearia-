@@ -87,6 +87,7 @@ export async function getProfessionalDashboard(
       endsAt: true,
       serviceNameSnapshot: true,
       customerNote: true,
+      payment: { select: { status: true, method: true } },
       customer: {
         select: {
           name: true,

@@ -71,7 +71,7 @@ Os dados de cartão nunca são armazenados pela aplicação; o checkout é proce
 - Cada profissional usa uma conta para acessar sua própria agenda e consultar os clientes e horários dos atendimentos atribuídos a ele.
 - O login com Google está disponível para barbearias e clientes; outros provedores poderão ser avaliados depois.
 - O cadastro e o login por e-mail e senha também estão disponíveis; senhas precisam ter entre 8 e 128 caracteres e são confirmadas no cadastro.
-- O envio de e-mails de verificação e de recuperação de senha ainda não está configurado.
+- A recuperação de senha envia um link por e-mail com validade de uma hora.
 - Profissionais vinculados a uma conta podem consultar em `/profissional` os próprios agendamentos confirmados e os dados de contato necessários dos clientes.
 - No fluxo do cliente, o login é solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
@@ -313,6 +313,6 @@ Para um ambiente público, ainda é necessário configurar credenciais reais, do
 
 - Publicar uma instância de demonstração com domínio HTTPS.
 - Configurar contas de teste compatíveis do Mercado Pago.
-- Adicionar recuperação de senha e e-mails transacionais adicionais.
+- Configurar verificação de e-mail e outros e-mails transacionais adicionais.
 - Definir planos, assinatura do SaaS e política de reembolso.
 - Expandir testes de integração para Server Actions e webhooks.

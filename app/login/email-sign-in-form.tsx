@@ -2,6 +2,7 @@
 
 import type { SubmitEvent } from "react";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
@@ -69,6 +70,9 @@ export default function EmailSignInForm({ redirectTo }: { redirectTo: string }) 
       <button className="auth-submit" disabled={isSubmitting} type="submit">
         {isSubmitting ? "Entrando..." : "Entrar com e-mail"}
       </button>
+      <Link className="auth-inline-link" href="/recuperar-senha">
+        Esqueci minha senha
+      </Link>
     </form>
   );
 }

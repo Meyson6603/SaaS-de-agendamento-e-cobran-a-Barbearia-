@@ -338,6 +338,32 @@ a {
   opacity: 0.65;
 }
 
+.auth-inline-link {
+  color: var(--accent-dark);
+  font-size: 11px;
+  text-align: center;
+  text-underline-offset: 3px;
+}
+
+.auth-submit-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.auth-result {
+  display: grid;
+  gap: 15px;
+}
+
+.auth-success {
+  margin: 0;
+  color: #356044;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .booking-management-actions {
   display: grid;
   gap: 8px;

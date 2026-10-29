@@ -11,7 +11,7 @@ export async function sendEmail(input: SendEmailInput) {
   const from = process.env.EMAIL_FROM;
 
   if (process.env.OTP_DEV_MODE === "true") {
-    console.info(`[OTP_DEV_MODE] Código enviado para ${input.to}: ${input.text}`);
+    console.info(`[OTP_DEV_MODE] E-mail enviado para ${input.to}: ${input.text}`);
     return;
   }
 

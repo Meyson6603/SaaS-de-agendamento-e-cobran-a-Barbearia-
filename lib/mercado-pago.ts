@@ -1,4 +1,7 @@
 import "server-only";
+import { mapMercadoPagoStatus } from "@/lib/payment-status";
+
+export { mapMercadoPagoStatus };
 
 const mercadoPagoApi = "https://api.mercadopago.com";
 
@@ -83,11 +86,4 @@ export async function getMercadoPagoPayment(paymentId: string) {
     throw new Error(`Mercado Pago recusou a consulta (${response.status}).`);
   }
   return (await response.json()) as PaymentResponse;
-}
-
-export function mapMercadoPagoStatus(status: string | undefined) {
-  if (status === "approved") return "PAID" as const;
-  if (status === "rejected" || status === "cancelled") return "FAILED" as const;
-  if (status === "refunded" || status === "charged_back") return "REFUNDED" as const;
-  return "PENDING" as const;
 }

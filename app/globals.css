@@ -2069,6 +2069,59 @@ a {
   gap: 4px;
 }
 
+.booking-config-list li,
+.manager-team-list li {
+  align-items: start;
+}
+
+.booking-config-editor {
+  display: grid;
+  flex: 0 0 min(100%, 260px);
+  gap: 10px;
+  margin-left: auto;
+}
+
+.booking-config-editor summary {
+  color: var(--accent-dark);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  list-style-position: inside;
+  text-transform: uppercase;
+}
+
+.booking-config-editor form {
+  display: grid;
+  gap: 10px;
+}
+
+.booking-config-editor .manager-team-form {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.manager-secondary-action {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 12px;
+}
+
+.manager-secondary-action:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.manager-secondary-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .booking-config-list strong {
   font-size: 11px;
 }

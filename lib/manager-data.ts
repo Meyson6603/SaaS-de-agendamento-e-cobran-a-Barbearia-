@@ -140,11 +140,16 @@ export async function getManagerDashboard(shopId?: string) {
         select: {
           id: true,
           name: true,
+          description: true,
           durationMinutes: true,
           price: true,
           isActive: true,
           professionals: {
-            select: { professional: { select: { id: true, displayName: true } } },
+            select: {
+              professional: {
+                select: { id: true, displayName: true, isActive: true },
+              },
+            },
           },
         },
       }),

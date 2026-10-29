@@ -216,6 +216,8 @@ Antes de publicar:
 
 O endpoint de saúde não expõe credenciais nem dados da aplicação. Em caso de indisponibilidade do banco, responde `503` para que plataformas de deploy e monitores possam detectar a falha.
 
+Os testes automatizados também cobrem os estados saudável e indisponível desse endpoint, sem depender de uma conexão real com o banco.
+
 ## Princípios do projeto
 
 - Separar a cobrança da assinatura do SaaS dos pagamentos dos serviços.

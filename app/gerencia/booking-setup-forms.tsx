@@ -5,6 +5,12 @@ import {
   addWeeklyAvailability,
   createProfessional,
   createShopService,
+  removeWeeklyAvailability,
+  toggleProfessionalStatus,
+  toggleShopService,
+  updateProfessional,
+  updateShopService,
+  updateWeeklyAvailability,
   type BarbershopSetupState,
 } from "@/app/actions/barbershop-setup";
 
@@ -18,10 +24,11 @@ type ProfessionalOption = {
 type ServiceOption = {
   id: string;
   name: string;
+  description: string | null;
   durationMinutes: number;
   price: string;
   isActive: boolean;
-  professionals: { id: string; displayName: string }[];
+  professionals: { id: string; displayName: string; isActive: boolean }[];
 };
 
 type AvailabilityOption = {
@@ -85,8 +92,12 @@ export default function BookingSetupForms({
             <ul className="manager-team-list">
               {professionals.map((professional) => (
                 <li key={professional.id}>
-                  <span>{professional.displayName}</span>
-                  <span>{professional.userEmail}</span>
+                  <div>
+                    <span>{professional.displayName}</span>
+                    <span>{professional.userEmail}</span>
+                    {!professional.isActive && <strong>Desativado</strong>}
+                  </div>
+                  <ProfessionalEditor shopId={shopId} professional={professional} />
                 </li>
               ))}
             </ul>
@@ -141,7 +152,13 @@ export default function BookingSetupForms({
                     <span>
                       {service.professionals.map(({ displayName }) => displayName).join(", ")}
                     </span>
+                    {!service.isActive && <span>Desativado</span>}
                   </div>
+                  <ServiceEditor
+                    activeProfessionals={activeProfessionals}
+                    service={service}
+                    shopId={shopId}
+                  />
                 </li>
               ))}
             </ul>
@@ -232,6 +249,7 @@ export default function BookingSetupForms({
                       {formatMinute(availability.startMinute)}–{formatMinute(availability.endMinute)}
                     </span>
                   </div>
+                  <AvailabilityEditor availability={availability} shopId={shopId} />
                 </li>
               ))}
             </ul>
@@ -315,6 +333,242 @@ function ActionFeedback({ state }: { state: BarbershopSetupState }) {
   }
 
   return null;
+}
+
+function ProfessionalEditor({
+  shopId,
+  professional,
+}: {
+  shopId: string;
+  professional: ProfessionalOption;
+}) {
+  const [updateState, updateAction, updatePending] = useActionState(
+    updateProfessional,
+    initialState,
+  );
+  const [toggleState, toggleAction, togglePending] = useActionState(
+    toggleProfessionalStatus,
+    initialState,
+  );
+
+  return (
+    <details className="booking-config-editor">
+      <summary>Editar</summary>
+      <form action={updateAction} className="manager-team-form">
+        <input name="shopId" type="hidden" value={shopId} />
+        <input name="professionalId" type="hidden" value={professional.id} />
+        <div className="manager-form-field">
+          <label htmlFor={`professional-name-${professional.id}`}>Nome profissional</label>
+          <input
+            id={`professional-name-${professional.id}`}
+            maxLength={100}
+            name="displayName"
+            required
+            defaultValue={professional.displayName}
+          />
+        </div>
+        <button className="auth-submit" disabled={updatePending} type="submit">
+          {updatePending ? "Salvando..." : "Salvar alterações"}
+        </button>
+        <ActionFeedback state={updateState} />
+      </form>
+      <form action={toggleAction}>
+        <input name="shopId" type="hidden" value={shopId} />
+        <input name="professionalId" type="hidden" value={professional.id} />
+        <input name="isActive" type="hidden" value={String(professional.isActive)} />
+        <button className="manager-secondary-action" disabled={togglePending} type="submit">
+          {togglePending
+            ? "Atualizando..."
+            : professional.isActive
+              ? "Desativar profissional"
+              : "Ativar profissional"}
+        </button>
+        <ActionFeedback state={toggleState} />
+      </form>
+    </details>
+  );
+}
+
+function ServiceEditor({
+  shopId,
+  service,
+  activeProfessionals,
+}: {
+  shopId: string;
+  service: ServiceOption;
+  activeProfessionals: ProfessionalOption[];
+}) {
+  const [updateState, updateAction, updatePending] = useActionState(
+    updateShopService,
+    initialState,
+  );
+  const [toggleState, toggleAction, togglePending] = useActionState(
+    toggleShopService,
+    initialState,
+  );
+  const assignedProfessionalIds = new Set(
+    service.professionals.map(({ id }) => id),
+  );
+
+  return (
+    <details className="booking-config-editor">
+      <summary>Editar</summary>
+      <form action={updateAction} className="manager-team-form">
+        <input name="shopId" type="hidden" value={shopId} />
+        <input name="serviceId" type="hidden" value={service.id} />
+        <div className="manager-form-field">
+          <label htmlFor={`service-name-${service.id}`}>Nome do serviço</label>
+          <input
+            id={`service-name-${service.id}`}
+            maxLength={100}
+            name="name"
+            required
+            defaultValue={service.name}
+          />
+        </div>
+        <div className="manager-form-field">
+          <label htmlFor={`service-description-${service.id}`}>Descrição</label>
+          <input
+            id={`service-description-${service.id}`}
+            maxLength={500}
+            name="description"
+            defaultValue={service.description ?? ""}
+          />
+        </div>
+        <div className="booking-inline-fields">
+          <div className="manager-form-field">
+            <label htmlFor={`service-duration-${service.id}`}>Duração (minutos)</label>
+            <input
+              id={`service-duration-${service.id}`}
+              max={480}
+              min={5}
+              name="durationMinutes"
+              required
+              type="number"
+              defaultValue={service.durationMinutes}
+            />
+          </div>
+          <div className="manager-form-field">
+            <label htmlFor={`service-price-${service.id}`}>Preço (R$)</label>
+            <input
+              id={`service-price-${service.id}`}
+              inputMode="decimal"
+              name="price"
+              required
+              defaultValue={service.price.replace(".", ",")}
+            />
+          </div>
+        </div>
+        <fieldset className="booking-professional-options">
+          <legend>Profissionais que oferecem este serviço</legend>
+          {activeProfessionals.map((professional) => (
+            <label key={professional.id}>
+              <input
+                defaultChecked={assignedProfessionalIds.has(professional.id)}
+                name="professionalIds"
+                type="checkbox"
+                value={professional.id}
+              />
+              {professional.displayName}
+            </label>
+          ))}
+        </fieldset>
+        <button className="auth-submit" disabled={updatePending} type="submit">
+          {updatePending ? "Salvando..." : "Salvar alterações"}
+        </button>
+        <ActionFeedback state={updateState} />
+      </form>
+      <form action={toggleAction}>
+        <input name="shopId" type="hidden" value={shopId} />
+        <input name="serviceId" type="hidden" value={service.id} />
+        <input name="isActive" type="hidden" value={String(service.isActive)} />
+        <button className="manager-secondary-action" disabled={togglePending} type="submit">
+          {togglePending
+            ? "Atualizando..."
+            : service.isActive
+              ? "Desativar serviço"
+              : "Ativar serviço"}
+        </button>
+        <ActionFeedback state={toggleState} />
+      </form>
+    </details>
+  );
+}
+
+function AvailabilityEditor({
+  shopId,
+  availability,
+}: {
+  shopId: string;
+  availability: AvailabilityOption;
+}) {
+  const [updateState, updateAction, updatePending] = useActionState(
+    updateWeeklyAvailability,
+    initialState,
+  );
+  const [removeState, removeAction, removePending] = useActionState(
+    removeWeeklyAvailability,
+    initialState,
+  );
+
+  return (
+    <details className="booking-config-editor">
+      <summary>Editar</summary>
+      <form action={updateAction} className="manager-team-form">
+        <input name="shopId" type="hidden" value={shopId} />
+        <input name="availabilityId" type="hidden" value={availability.id} />
+        <div className="manager-form-field">
+          <label htmlFor={`availability-weekday-${availability.id}`}>Dia da semana</label>
+          <select
+            defaultValue={availability.weekday}
+            id={`availability-weekday-${availability.id}`}
+            name="weekday"
+            required
+          >
+            {weekdayOptions.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="booking-inline-fields">
+          <div className="manager-form-field">
+            <label htmlFor={`availability-start-${availability.id}`}>Das</label>
+            <input
+              defaultValue={formatMinute(availability.startMinute)}
+              id={`availability-start-${availability.id}`}
+              name="startTime"
+              required
+              type="time"
+            />
+          </div>
+          <div className="manager-form-field">
+            <label htmlFor={`availability-end-${availability.id}`}>Até</label>
+            <input
+              defaultValue={formatMinute(availability.endMinute)}
+              id={`availability-end-${availability.id}`}
+              name="endTime"
+              required
+              type="time"
+            />
+          </div>
+        </div>
+        <button className="auth-submit" disabled={updatePending} type="submit">
+          {updatePending ? "Salvando..." : "Salvar alterações"}
+        </button>
+        <ActionFeedback state={updateState} />
+      </form>
+      <form action={removeAction}>
+        <input name="shopId" type="hidden" value={shopId} />
+        <input name="availabilityId" type="hidden" value={availability.id} />
+        <button className="manager-secondary-action" disabled={removePending} type="submit">
+          {removePending ? "Removendo..." : "Remover horário"}
+        </button>
+        <ActionFeedback state={removeState} />
+      </form>
+    </details>
+  );
 }
 
 function formatMinute(minutes: number) {

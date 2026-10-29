@@ -103,6 +103,75 @@ export async function createProfessional(
   return { error: null, success: `${displayName} foi adicionado(a) à equipe.` };
 }
 
+export async function updateProfessional(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const professionalId = getFormString(formData, "professionalId");
+  const displayName = getFormString(formData, "displayName");
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  if (displayName.length < 2 || displayName.length > 100) {
+    return { error: "Informe um nome profissional entre 2 e 100 caracteres.", success: null };
+  }
+
+  const professional = await prisma.professional.findFirst({
+    where: { id: professionalId, shopId },
+    select: { id: true },
+  });
+
+  if (!professional) {
+    return { error: "O profissional selecionado não foi encontrado.", success: null };
+  }
+
+  await prisma.professional.update({
+    where: { id: professional.id },
+    data: { displayName },
+  });
+
+  await revalidateShopPages(authorization.slug);
+  return { error: null, success: "Profissional atualizado." };
+}
+
+export async function toggleProfessionalStatus(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const professionalId = getFormString(formData, "professionalId");
+  const isActive = getFormString(formData, "isActive") === "true";
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  const professional = await prisma.professional.findFirst({
+    where: { id: professionalId, shopId },
+    select: { id: true, displayName: true },
+  });
+
+  if (!professional) {
+    return { error: "O profissional selecionado não foi encontrado.", success: null };
+  }
+
+  await prisma.professional.update({
+    where: { id: professional.id },
+    data: { isActive: !isActive },
+  });
+
+  await revalidateShopPages(authorization.slug);
+  return {
+    error: null,
+    success: `${professional.displayName} foi ${isActive ? "desativado(a)" : "ativado(a)"}.`,
+  };
+}
+
 export async function createShopService(
   _previousState: BarbershopSetupState,
   formData: FormData,
@@ -178,6 +247,121 @@ export async function createShopService(
   return { error: null, success: `O serviço ${name} foi cadastrado.` };
 }
 
+export async function updateShopService(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const serviceId = getFormString(formData, "serviceId");
+  const name = getFormString(formData, "name");
+  const description = getFormString(formData, "description");
+  const durationMinutes = Number(getFormString(formData, "durationMinutes"));
+  const price = getFormString(formData, "price").replace(",", ".");
+  const professionalIds = [
+    ...new Set(
+      formData
+        .getAll("professionalIds")
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
+  ];
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  if (
+    name.length < 2 ||
+    name.length > 100 ||
+    description.length > 500 ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes < 5 ||
+    durationMinutes > 480 ||
+    !/^\d{1,8}(?:\.\d{1,2})?$/.test(price) ||
+    Number(price) <= 0 ||
+    professionalIds.length === 0
+  ) {
+    return {
+      error: "Confira o nome, a duração, o preço e selecione ao menos um profissional.",
+      success: null,
+    };
+  }
+
+  const service = await prisma.service.findFirst({
+    where: { id: serviceId, shopId },
+    select: { id: true },
+  });
+  if (!service) {
+    return { error: "O serviço selecionado não foi encontrado.", success: null };
+  }
+
+  const professionalsCount = await prisma.professional.count({
+    where: { shopId, id: { in: professionalIds }, isActive: true },
+  });
+  if (professionalsCount !== professionalIds.length) {
+    return {
+      error: "Selecione apenas profissionais ativos desta barbearia.",
+      success: null,
+    };
+  }
+
+  await prisma.$transaction(async (transaction) => {
+    await transaction.service.update({
+      where: { id: service.id },
+      data: {
+        name,
+        description: description || null,
+        durationMinutes,
+        price: new Prisma.Decimal(price),
+      },
+    });
+    await transaction.professionalService.deleteMany({ where: { shopId, serviceId } });
+    await transaction.professionalService.createMany({
+      data: professionalIds.map((professionalId) => ({
+        shopId,
+        professionalId,
+        serviceId,
+      })),
+    });
+  });
+
+  await revalidateShopPages(authorization.slug);
+  return { error: null, success: `O serviço ${name} foi atualizado.` };
+}
+
+export async function toggleShopService(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const serviceId = getFormString(formData, "serviceId");
+  const isActive = getFormString(formData, "isActive") === "true";
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  const service = await prisma.service.findFirst({
+    where: { id: serviceId, shopId },
+    select: { id: true, name: true },
+  });
+  if (!service) {
+    return { error: "O serviço selecionado não foi encontrado.", success: null };
+  }
+
+  await prisma.service.update({
+    where: { id: service.id },
+    data: { isActive: !isActive },
+  });
+
+  await revalidateShopPages(authorization.slug);
+  return {
+    error: null,
+    success: `O serviço ${service.name} foi ${isActive ? "desativado" : "ativado"}.`,
+  };
+}
+
 export async function addWeeklyAvailability(
   _previousState: BarbershopSetupState,
   formData: FormData,
@@ -241,6 +425,86 @@ export async function addWeeklyAvailability(
     error: null,
     success: `Horário semanal adicionado para ${professional.displayName}.`,
   };
+}
+
+export async function updateWeeklyAvailability(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const availabilityId = getFormString(formData, "availabilityId");
+  const weekday = getFormString(formData, "weekday");
+  const selectedWeekday = weekdays.find((value) => value === weekday);
+  const startMinute = parseTime(getFormString(formData, "startTime"));
+  const endMinute = parseTime(getFormString(formData, "endTime"));
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  if (
+    !selectedWeekday ||
+    startMinute === null ||
+    endMinute === null ||
+    startMinute >= endMinute
+  ) {
+    return { error: "Informe um dia e um intervalo de horários válido.", success: null };
+  }
+
+  const availability = await prisma.weeklyAvailability.findFirst({
+    where: { id: availabilityId, shopId },
+    select: { id: true },
+  });
+  if (!availability) {
+    return { error: "O horário selecionado não foi encontrado.", success: null };
+  }
+
+  try {
+    await prisma.weeklyAvailability.update({
+      where: { id: availability.id },
+      data: { weekday: selectedWeekday, startMinute, endMinute },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        error: "Já existe um horário com esse início para o profissional neste dia.",
+        success: null,
+      };
+    }
+    throw error;
+  }
+
+  await revalidateShopPages(authorization.slug);
+  return { error: null, success: "Horário semanal atualizado." };
+}
+
+export async function removeWeeklyAvailability(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const availabilityId = getFormString(formData, "availabilityId");
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  const availability = await prisma.weeklyAvailability.findFirst({
+    where: { id: availabilityId, shopId },
+    select: { id: true },
+  });
+  if (!availability) {
+    return { error: "O horário selecionado não foi encontrado.", success: null };
+  }
+
+  await prisma.weeklyAvailability.delete({ where: { id: availability.id } });
+  await revalidateShopPages(authorization.slug);
+  return { error: null, success: "Horário semanal removido." };
 }
 
 async function authorizeShopManagement(shopId: string): Promise<ShopAuthorization> {

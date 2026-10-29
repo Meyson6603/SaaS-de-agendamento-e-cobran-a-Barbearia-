@@ -2095,6 +2095,17 @@ a {
   gap: 10px;
 }
 
+.booking-block-removal {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+.booking-block-removal .auth-error,
+.booking-block-removal .profile-success {
+  margin: 0;
+}
+
 .booking-config-editor .manager-team-form {
   border-top: 1px solid var(--line);
   padding-top: 10px;

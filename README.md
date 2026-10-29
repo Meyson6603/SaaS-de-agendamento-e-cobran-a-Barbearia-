@@ -51,7 +51,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 4. O proprietário e os gerentes vinculam profissionais que já tenham uma conta verificada.
 5. Cadastram os serviços, associam cada serviço aos profissionais que o oferecem e definem a disponibilidade semanal.
 6. Compartilham o link público `/{slug}` para os clientes consultarem serviços e horários.
-7. Solicitações de folga e bloqueios pontuais ainda não têm interface de configuração.
+7. Proprietários, gerentes e administradores podem cadastrar e remover bloqueios pontuais por profissional, com data, intervalo e motivo opcional.
 
 ### Operação diária
 
@@ -177,7 +177,7 @@ O painel apresenta indicadores agregados e listas de barbearias e usuários. Na 
 
 O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários ou administradores podem adicionar contas existentes e verificadas como `MANAGER`. Convites por e-mail ainda não estão configurados.
 
-O painel mostra indicadores, próximos atendimentos e permite consultar/adicionar gerentes, profissionais, serviços e horários semanais. Profissionais precisam ter uma conta verificada preexistente. Os horários são recorrentes, e as opções públicas são geradas em intervalos de 15 minutos para os próximos 14 dias. Proprietários, gerentes e administradores podem editar e ativar ou desativar profissionais e serviços; horários semanais podem ser editados ou removidos. Bloqueios pontuais e gestão de cancelamentos ainda não estão disponíveis. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
+O painel mostra indicadores, próximos atendimentos e permite consultar/adicionar gerentes, profissionais, serviços e horários semanais. Profissionais precisam ter uma conta verificada preexistente. Os horários são recorrentes, e as opções públicas são geradas em intervalos de 15 minutos para os próximos 14 dias. Proprietários, gerentes e administradores podem editar e ativar ou desativar profissionais e serviços; horários semanais podem ser editados ou removidos. Bloqueios pontuais podem ser cadastrados por profissional com data, intervalo e motivo opcional; eles impedem novas reservas que tenham conflito. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
 
 O link público usa o identificador da barbearia, por exemplo `/{slug}`. O endereço `/` redireciona para a única barbearia cadastrada ou mostra a lista quando há várias. Ao confirmar, o sistema salva o agendamento e um registro de pagamento pendente; nenhum pagamento é processado.
 
@@ -210,4 +210,4 @@ O fluxo público de agendamento consulta serviços e disponibilidade real, exige
 
 Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A validação de formato não confirma que a linha existe ou pertence ao cliente; isso exigirá OTP por SMS ou WhatsApp. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
 
-Ainda precisam ser implementados: bloqueios pontuais de agenda, cancelamento e remarcação de agendamentos, notificações e integrações de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. A confirmação de telefone também depende de uma futura integração de verificação por SMS ou WhatsApp.
+Ainda precisam ser implementados: cancelamento e remarcação de agendamentos, notificações e integrações de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. A confirmação de telefone também depende de uma futura integração de verificação por SMS ou WhatsApp.

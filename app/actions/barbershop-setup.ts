@@ -5,6 +5,7 @@ import { Prisma, type Weekday } from "@/generated/prisma/client";
 import { getSession } from "@/lib/auth-session";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { prisma } from "@/lib/prisma";
+import { zonedDateTimeToDate } from "@/lib/booking-availability";
 
 export type BarbershopSetupState = {
   error: string | null;
@@ -12,7 +13,7 @@ export type BarbershopSetupState = {
 };
 
 type ShopAuthorization =
-  | { success: true; slug: string }
+  | { success: true; slug: string; timezone: string }
   | { success: false; error: string };
 
 const weekdays: Weekday[] = [
@@ -507,6 +508,97 @@ export async function removeWeeklyAvailability(
   return { error: null, success: "Horário semanal removido." };
 }
 
+export async function createAvailabilityBlock(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const professionalId = getFormString(formData, "professionalId");
+  const date = getFormString(formData, "date");
+  const startTime = getFormString(formData, "startTime");
+  const endTime = getFormString(formData, "endTime");
+  const reason = getFormString(formData, "reason");
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  if (reason.length > 200) {
+    return { error: "O motivo deve ter no máximo 200 caracteres.", success: null };
+  }
+
+  const startMinute = parseTime(startTime);
+  const endMinute = parseTime(endTime);
+  const startsAt =
+    startMinute === null
+      ? null
+      : zonedDateTimeToDate(date, startMinute, authorization.timezone);
+  const endsAt =
+    endMinute === null
+      ? null
+      : zonedDateTimeToDate(date, endMinute, authorization.timezone);
+
+  if (!startsAt || !endsAt || startsAt >= endsAt || startsAt <= new Date()) {
+    return {
+      error: "Informe uma data futura e um intervalo de horários válido.",
+      success: null,
+    };
+  }
+
+  const professional = await prisma.professional.findFirst({
+    where: { id: professionalId, shopId, isActive: true },
+    select: { id: true, displayName: true },
+  });
+
+  if (!professional) {
+    return { error: "Selecione um profissional ativo desta barbearia.", success: null };
+  }
+
+  await prisma.availabilityException.create({
+    data: {
+      shopId,
+      professionalId,
+      type: "BLOCKED",
+      startsAt,
+      endsAt,
+      reason: reason || null,
+    },
+  });
+
+  await revalidateShopPages(authorization.slug);
+  return {
+    error: null,
+    success: `Bloqueio adicionado para ${professional.displayName}.`,
+  };
+}
+
+export async function removeAvailabilityBlock(
+  _previousState: BarbershopSetupState,
+  formData: FormData,
+): Promise<BarbershopSetupState> {
+  const shopId = getFormString(formData, "shopId");
+  const exceptionId = getFormString(formData, "exceptionId");
+  const authorization = await authorizeShopManagement(shopId);
+
+  if (!authorization.success) {
+    return { error: authorization.error, success: null };
+  }
+
+  const exception = await prisma.availabilityException.findFirst({
+    where: { id: exceptionId, shopId, type: "BLOCKED" },
+    select: { id: true },
+  });
+
+  if (!exception) {
+    return { error: "O bloqueio selecionado não foi encontrado.", success: null };
+  }
+
+  await prisma.availabilityException.delete({ where: { id: exception.id } });
+  await revalidateShopPages(authorization.slug);
+  return { error: null, success: "Bloqueio removido." };
+}
+
 async function authorizeShopManagement(shopId: string): Promise<ShopAuthorization> {
   const session = await getSession();
 
@@ -516,7 +608,7 @@ async function authorizeShopManagement(shopId: string): Promise<ShopAuthorizatio
 
   const shop = await prisma.barbershop.findUnique({
     where: { id: shopId },
-    select: { slug: true },
+    select: { slug: true, timezone: true },
   });
 
   if (!shop) {
@@ -539,7 +631,7 @@ async function authorizeShopManagement(shopId: string): Promise<ShopAuthorizatio
     };
   }
 
-  return { success: true, slug: shop.slug };
+  return { success: true, slug: shop.slug, timezone: shop.timezone };
 }
 
 async function revalidateShopPages(slug: string) {

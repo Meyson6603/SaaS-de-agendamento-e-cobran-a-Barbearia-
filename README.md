@@ -201,6 +201,19 @@ npm run db:studio    # abre a interface local do Prisma Studio
 npx auth secret      # gera um segredo para configurar em BETTER_AUTH_SECRET
 ```
 
+### Deploy e operação
+
+Antes de publicar:
+
+1. Configure as variáveis de `.env.example` no ambiente de produção, usando um `BETTER_AUTH_URL` e `APP_URL` HTTPS.
+2. Use `OTP_DEV_MODE=false` e configure `RESEND_API_KEY` e `EMAIL_FROM`.
+3. Configure `MERCADOPAGO_WEBHOOK_SECRET` e registre `/api/payments/mercadopago/webhook` no provedor.
+4. Execute `npx prisma migrate deploy` no banco de produção.
+5. Valide `GET /api/health`, que retorna `200` somente quando o banco está acessível.
+6. Confirme o fluxo de login, agendamento, OTP e retorno do checkout antes de liberar o link público.
+
+O endpoint de saúde não expõe credenciais nem dados da aplicação. Em caso de indisponibilidade do banco, responde `503` para que plataformas de deploy e monitores possam detectar a falha.
+
 ## Princípios do projeto
 
 - Separar a cobrança da assinatura do SaaS dos pagamentos dos serviços.

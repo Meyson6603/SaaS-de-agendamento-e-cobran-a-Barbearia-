@@ -157,7 +157,7 @@ async function AuthenticatedServicePicker({
   const user = session
     ? await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { phone: true },
+        select: { phone: true, emailOtpVerifiedAt: true },
       })
     : null;
 
@@ -176,6 +176,7 @@ async function AuthenticatedServicePicker({
               name: session.user.name,
               email: session.user.email,
               phone: user?.phone ?? null,
+              emailVerified: Boolean(user?.emailOtpVerifiedAt),
             }
           : null
       }

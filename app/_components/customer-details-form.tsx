@@ -3,8 +3,9 @@
 import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { createBooking } from "@/app/actions/booking";
-import { saveCustomerPhone } from "@/app/actions/customer-profile";
+import { sendEmailOtp, verifyEmailOtp } from "@/app/actions/email-otp";
 import { createOnlinePayment } from "@/app/actions/online-payment";
+import { saveCustomerPhone } from "@/app/actions/customer-profile";
 import {
   formatBrazilianPhone,
   isValidBrazilianPhone,
@@ -15,6 +16,7 @@ type CustomerDetailsFormProps = {
   customerEmail: string;
   customerName: string;
   customerPhone: string | null;
+  emailVerified: boolean;
   date: string;
   dateValue: string;
   onBookingComplete: () => void;
@@ -31,6 +33,7 @@ export default function CustomerDetailsForm({
   customerEmail,
   customerName,
   customerPhone,
+  emailVerified,
   date,
   dateValue,
   onBookingComplete,
@@ -45,11 +48,15 @@ export default function CustomerDetailsForm({
   const [phone, setPhone] = useState(
     customerPhone ? formatBrazilianPhone(customerPhone) : "",
   );
-  const [savedPhone, setSavedPhone] = useState(
+  const [savedPhone] = useState(
     customerPhone ? normalizeBrazilianPhone(customerPhone) : "",
   );
-  const [isSaving, setIsSaving] = useState(false);
+  const [notes, setNotes] = useState("");
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
@@ -57,37 +64,20 @@ export default function CustomerDetailsForm({
   const hasSavedPhone = Boolean(savedPhone);
 
   async function persistPhone(value: string) {
-    const digits = normalizeBrazilianPhone(value);
-
     if (!isValidBrazilianPhone(value)) {
       setErrorMessage("Informe um telefone brasileiro válido, com DDD e número.");
       return false;
     }
 
-    if (digits === savedPhone) {
-      return true;
-    }
-
-    setIsSaving(true);
-    setErrorMessage(null);
-
-    try {
+    if (normalizeBrazilianPhone(value) !== savedPhone) {
       const result = await saveCustomerPhone(value);
-
       if (!result.success) {
         setErrorMessage(result.error);
         return false;
       }
-
-      setPhone(formatBrazilianPhone(result.phone));
-      setSavedPhone(result.phone);
-      return true;
-    } catch {
-      setErrorMessage("Não foi possível salvar seu telefone. Tente novamente.");
-      return false;
-    } finally {
-      setIsSaving(false);
     }
+
+    return true;
   }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -99,9 +89,42 @@ export default function CustomerDetailsForm({
       return;
     }
 
-    setIsConfirming(true);
-    setErrorMessage(null);
+    if (!emailVerified) {
+      setIsSendingOtp(true);
+      setErrorMessage(null);
+      try {
+        const result = await sendEmailOtp();
+        if (!result.success) {
+          setErrorMessage(result.error);
+          return;
+        }
+        setOtpSent(true);
+        return;
+      } finally {
+        setIsSendingOtp(false);
+      }
+    }
 
+    await confirmBooking(notes);
+  }
+
+  async function confirmEmail() {
+    setIsVerifyingOtp(true);
+    setErrorMessage(null);
+    try {
+      const result = await verifyEmailOtp(otpCode);
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+      await confirmBooking(notes);
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  }
+
+  async function confirmBooking(customerNote: string) {
+    setIsConfirming(true);
     try {
       const result = await createBooking(
         shopSlug,
@@ -109,14 +132,12 @@ export default function CustomerDetailsForm({
         professionalId,
         dateValue,
         time,
-        String(formData.get("notes") ?? "").trim(),
+        customerNote,
       );
-
       if (!result.success) {
         setErrorMessage(result.error);
         return;
       }
-
       setBookingConfirmed(true);
       setConfirmedBookingId(result.bookingId);
       onBookingComplete();
@@ -125,7 +146,6 @@ export default function CustomerDetailsForm({
     } finally {
       setIsConfirming(false);
     }
-
   }
 
   async function handleOnlinePayment() {
@@ -203,6 +223,29 @@ export default function CustomerDetailsForm({
       </div>
 
       <form className="customer-form" onSubmit={handleSubmit}>
+        {otpSent && (
+          <div className="form-field form-field-full">
+            <label htmlFor="email-otp">Código enviado para {customerEmail}</label>
+            <input
+              id="email-otp"
+              inputMode="numeric"
+              maxLength={6}
+              onChange={(event) => setOtpCode(event.target.value)}
+              pattern="\d{6}"
+              required
+              value={otpCode}
+            />
+            <button
+              className="booking-restart"
+              disabled={isVerifyingOtp || isConfirming}
+              onClick={() => void confirmEmail()}
+              type="button"
+            >
+              {isVerifyingOtp ? "Verificando..." : "Verificar e-mail"}
+            </button>
+          </div>
+        )}
+
         <div className="form-field form-field-full">
           <label htmlFor="customer-phone">
             {hasSavedPhone ? "Telefone salvo" : "Seu telefone"}
@@ -235,6 +278,11 @@ export default function CustomerDetailsForm({
               Esse número já está salvo na sua conta.
             </span>
           )}
+          {!emailVerified && (
+            <span className="auth-field-hint">
+              Você receberá um código de verificação por e-mail.
+            </span>
+          )}
           <span className="auth-field-hint">
             Digite o DDD e o número, sem o código do país. Ex.: (11) 99999-9999.
           </span>
@@ -248,6 +296,7 @@ export default function CustomerDetailsForm({
             id="customer-notes"
             maxLength={500}
             name="notes"
+            onChange={(event) => setNotes(event.target.value)}
             placeholder="Tem alguma preferência para o atendimento?"
             rows={3}
           />
@@ -261,14 +310,16 @@ export default function CustomerDetailsForm({
 
         <button
           className="submit-booking"
-          disabled={isSaving || isConfirming}
+          disabled={isSendingOtp || isConfirming}
           type="submit"
         >
-          {isSaving
-            ? "Salvando telefone..."
+          {isSendingOtp
+            ? "Enviando código..."
             : isConfirming
               ? "Confirmando..."
-              : "Confirmar agendamento"}
+              : otpSent
+                ? "Código enviado por e-mail"
+                : "Confirmar agendamento"}
         </button>
       </form>
 

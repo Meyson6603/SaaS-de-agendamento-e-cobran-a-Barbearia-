@@ -39,7 +39,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - No fluxo do cliente, o login é solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.
 - Clientes autenticados podem confirmar agendamentos em `/{slug}`; a confirmação valida a sessão, a disponibilidade e os dados do serviço no servidor.
-- O telefone do cliente é salvo no perfil antes da confirmação. O sistema ainda não verifica a posse da linha por SMS ou WhatsApp.
+- O telefone do cliente é salvo no perfil antes da confirmação. A posse da conta é confirmada por OTP enviado ao e-mail cadastrado.
 
 ## Fluxo administrativo do MVP
 
@@ -67,6 +67,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - Cancelamentos e remarcações revalidam a disponibilidade no servidor e registram eventos no histórico do agendamento.
 - O sistema registra notificações internas para confirmações, cancelamentos, remarcações e pagamentos recebidos.
 - O checkout online usa o Mercado Pago para Pix e cartão; o pagamento é confirmado por webhook e permanece pendente até a confirmação do provedor.
+- A confirmação do primeiro agendamento exige OTP por e-mail; códigos expiram em 10 minutos e têm limite de tentativas. O envio usa Resend, com uma opção explícita de modo local para testes sem provedor.
 
 Regras detalhadas de cancelamento, exceções de horário, notificações e pagamentos ainda precisam ser definidas.
 
@@ -213,6 +214,6 @@ npx auth secret      # gera um segredo para configurar em BETTER_AUTH_SECRET
 
 O fluxo público de agendamento consulta serviços e disponibilidade real, exige autenticação para confirmar e grava o agendamento no PostgreSQL. A disponibilidade é revalidada na transação, e o pagamento fica pendente até ser registrado pela barbearia. O gerenciamento da equipe, serviços e horários semanais está disponível em `/gerencia`.
 
-Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A validação de formato não confirma que a linha existe ou pertence ao cliente; isso exigirá OTP por SMS ou WhatsApp. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
+Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A confirmação do agendamento usa OTP por e-mail. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
 
-Ainda precisam ser implementados: notificações e integrações de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. A confirmação de telefone também depende de uma futura integração de verificação por SMS ou WhatsApp. O cancelamento não altera nem reembolsa pagamentos automaticamente.
+Ainda precisam ser implementados: melhorias de entrega de e-mail e integrações adicionais de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. O cancelamento não altera nem reembolsa pagamentos automaticamente.

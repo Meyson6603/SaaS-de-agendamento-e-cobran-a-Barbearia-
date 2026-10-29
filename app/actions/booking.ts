@@ -10,6 +10,7 @@ import {
   isBookingSlotAvailable,
 } from "@/lib/booking-availability";
 import { prisma } from "@/lib/prisma";
+import { notifyBookingParticipants } from "@/lib/notifications";
 
 export type BookingResult =
   | { success: true; bookingId: string }
@@ -184,7 +185,24 @@ export async function createBooking(
               },
             },
           },
-          select: { id: true },
+          select: {
+            id: true,
+            shopId: true,
+            customerId: true,
+            professionalId: true,
+            serviceNameSnapshot: true,
+            startsAt: true,
+          },
+        });
+        await notifyBookingParticipants(transaction, {
+          bookingId: booking.id,
+          shopId: booking.shopId,
+          customerId: booking.customerId,
+          professionalId: booking.professionalId,
+          serviceName: booking.serviceNameSnapshot,
+          startsAt: booking.startsAt,
+          timezone: shop.timezone,
+          type: "BOOKING_CONFIRMED",
         });
         return { booking, reason: null };
       },

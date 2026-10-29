@@ -24,7 +24,7 @@ export default function DashboardPage() {
 async function DashboardContent() {
   const session = await requireSession();
   const now = new Date();
-  const [upcomingBookings, bookingHistory, cancelledBookings, payments] = await Promise.all([
+  const [upcomingBookings, bookingHistory, cancelledBookings, payments, notifications] = await Promise.all([
     prisma.booking.findMany({
       where: {
         customerId: session.user.id,
@@ -69,6 +69,18 @@ async function DashboardContent() {
             shop: { select: { name: true } },
           },
         },
+      },
+    }),
+    prisma.notification.findMany({
+      where: { userId: session.user.id },
+      take: 20,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        message: true,
+        createdAt: true,
+        readAt: true,
       },
     }),
   ]);
@@ -247,6 +259,36 @@ async function DashboardContent() {
             </p>
           )}
         </section>
+
+        <section
+          aria-labelledby="notifications-title"
+          className="dashboard-section"
+          id="notificacoes"
+        >
+          <div className="dashboard-section-heading">
+            <div>
+              <p className="eyebrow">AVISOS</p>
+              <h2 id="notifications-title">Notificações</h2>
+            </div>
+          </div>
+          {notifications.length ? (
+            <div className="notification-list">
+              {notifications.map((notification) => (
+                <article className="notification-item" key={notification.id}>
+                  <div>
+                    <strong>{notification.title}</strong>
+                    <span>{notification.message}</span>
+                  </div>
+                  <time dateTime={notification.createdAt.toISOString()}>
+                    {formatNotificationDate(notification.createdAt)}
+                  </time>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="account-empty-state">Você não tem notificações novas.</p>
+          )}
+        </section>
       </div>
     </main>
   );
@@ -276,4 +318,12 @@ function paymentStatusLabel(status: string) {
   };
 
   return labels[status] ?? "Status indisponível";
+}
+
+function formatNotificationDate(date: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(date);
 }

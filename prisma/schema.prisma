@@ -40,6 +40,13 @@ enum BookingEventType {
   RESCHEDULED
 }
 
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+  PAYMENT_RECEIVED
+}
+
 enum PaymentMethod {
   PIX
   CASH
@@ -69,6 +76,7 @@ model User {
   memberships Membership[]
   bookings    Booking[] @relation("BookingCustomer")
   bookingEvents BookingEvent[] @relation("BookingEventActor")
+  notifications Notification[]
 }
 
 model Account {
@@ -133,6 +141,7 @@ model Barbershop {
   services               Service[]
   availabilityExceptions AvailabilityException[]
   bookings               Booking[]
+  notifications          Notification[]
 }
 
 model Membership {
@@ -255,6 +264,7 @@ model Booking {
   customer     User         @relation("BookingCustomer", fields: [customerId], references: [id], onDelete: Restrict)
   payment      Payment?
   events       BookingEvent[]
+  notifications Notification[]
 
   @@index([shopId, startsAt])
   @@index([shopId, status, startsAt])
@@ -291,4 +301,23 @@ model BookingEvent {
 
   @@index([bookingId, createdAt])
   @@index([actorId, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  shopId    String
+  bookingId String?
+  type      NotificationType
+  title     String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop    Barbershop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  booking Booking?   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([bookingId, createdAt])
 }

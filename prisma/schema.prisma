@@ -278,6 +278,9 @@ model Payment {
   method    PaymentMethod?
   status    PaymentStatus  @default(PENDING)
   amount    Decimal        @db.Decimal(10, 2)
+  provider  String?
+  providerReference String? @unique
+  checkoutUrl String?
   paidAt    DateTime?      @db.Timestamptz(3)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt

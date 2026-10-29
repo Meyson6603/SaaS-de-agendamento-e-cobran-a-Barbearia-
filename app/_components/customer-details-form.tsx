@@ -4,6 +4,7 @@ import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { createBooking } from "@/app/actions/booking";
 import { saveCustomerPhone } from "@/app/actions/customer-profile";
+import { createOnlinePayment } from "@/app/actions/online-payment";
 import {
   formatBrazilianPhone,
   isValidBrazilianPhone,
@@ -51,6 +52,8 @@ export default function CustomerDetailsForm({
   const [isConfirming, setIsConfirming] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
+  const [isStartingPayment, setIsStartingPayment] = useState(false);
   const hasSavedPhone = Boolean(savedPhone);
 
   async function persistPhone(value: string) {
@@ -115,11 +118,31 @@ export default function CustomerDetailsForm({
       }
 
       setBookingConfirmed(true);
+      setConfirmedBookingId(result.bookingId);
       onBookingComplete();
     } catch {
       setErrorMessage("Não foi possível confirmar o agendamento. Tente novamente.");
     } finally {
       setIsConfirming(false);
+    }
+
+  }
+
+  async function handleOnlinePayment() {
+    if (!confirmedBookingId) return;
+    setIsStartingPayment(true);
+    setErrorMessage(null);
+    try {
+      const result = await createOnlinePayment(confirmedBookingId);
+      if (!result.success) {
+        setErrorMessage(result.error);
+        return;
+      }
+      window.location.assign(result.checkoutUrl);
+    } catch {
+      setErrorMessage("Não foi possível iniciar o pagamento online. Tente novamente.");
+    } finally {
+      setIsStartingPayment(false);
     }
   }
 
@@ -142,6 +165,19 @@ export default function CustomerDetailsForm({
           <div><dt>Data</dt><dd>{date}</dd></div>
           <div><dt>Horário</dt><dd>{time}</dd></div>
         </dl>
+        <button
+          className="submit-booking"
+          disabled={isStartingPayment}
+          onClick={() => void handleOnlinePayment()}
+          type="button"
+        >
+          {isStartingPayment ? "Abrindo pagamento..." : "Pagar online"}
+        </button>
+        {errorMessage && (
+          <p aria-live="polite" className="auth-error" role="alert">
+            {errorMessage}
+          </p>
+        )}
         <button className="booking-restart" onClick={onRestart} type="button">
           Fazer outro agendamento
         </button>

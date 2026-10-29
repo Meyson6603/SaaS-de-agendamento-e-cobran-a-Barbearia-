@@ -27,6 +27,7 @@ type ServicePickerProps = {
     name: string;
     email: string;
     phone: string | null;
+    emailVerified: boolean;
   } | null;
   dates: BookingDateOption[];
   initialSelection: {
@@ -201,7 +202,7 @@ export default function ServicePicker({
               ? "Seu horário foi registrado e já aparece na sua conta."
               : selectedTime
                 ? customerProfile?.phone
-                  ? "Confira os dados da sua conta para confirmar."
+                  ? "Confira os dados da sua conta e confirme seu e-mail."
                   : "Informe seu telefone para confirmar."
                 : selectedProfessional
                   ? "Consulte a disponibilidade real da agenda."
@@ -391,6 +392,7 @@ export default function ServicePicker({
                 customerEmail={customerProfile.email}
                 customerName={customerProfile.name}
                 customerPhone={customerProfile.phone}
+                emailVerified={customerProfile.emailVerified}
                 onBookingComplete={() => setBookingComplete(true)}
                 onRestart={resetSchedule}
                 professionalName={selectedProfessional.displayName}

@@ -62,37 +62,40 @@ enum PaymentStatus {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  name          String
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  image         String?
-  phone         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  emailVerified      Boolean   @default(false)
+  emailOtpVerifiedAt DateTime?
+  image              String?
+  phone              String?
+  phoneVerifiedAt    DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  memberships Membership[]
-  bookings    Booking[] @relation("BookingCustomer")
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Membership[]
+  bookings      Booking[]      @relation("BookingCustomer")
   bookingEvents BookingEvent[] @relation("BookingEventActor")
   notifications Notification[]
+  otpChallenges OtpChallenge[]
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  accountId         String
-  providerId        String
-  accessToken       String? @db.Text
-  refreshToken      String? @db.Text
-  idToken           String? @db.Text
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
-  scope             String?
-  password          String? @db.Text
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  scope                 String?
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -258,12 +261,12 @@ model Booking {
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
-  shop         Barbershop   @relation(fields: [shopId], references: [id], onDelete: Restrict)
-  professional Professional @relation(fields: [shopId, professionalId], references: [shopId, id], onDelete: Restrict)
-  service      Service      @relation(fields: [shopId, serviceId], references: [shopId, id], onDelete: Restrict)
-  customer     User         @relation("BookingCustomer", fields: [customerId], references: [id], onDelete: Restrict)
-  payment      Payment?
-  events       BookingEvent[]
+  shop          Barbershop     @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  professional  Professional   @relation(fields: [shopId, professionalId], references: [shopId, id], onDelete: Restrict)
+  service       Service        @relation(fields: [shopId, serviceId], references: [shopId, id], onDelete: Restrict)
+  customer      User           @relation("BookingCustomer", fields: [customerId], references: [id], onDelete: Restrict)
+  payment       Payment?
+  events        BookingEvent[]
   notifications Notification[]
 
   @@index([shopId, startsAt])
@@ -273,17 +276,17 @@ model Booking {
 }
 
 model Payment {
-  id        String         @id @default(cuid())
-  bookingId String         @unique
-  method    PaymentMethod?
-  status    PaymentStatus  @default(PENDING)
-  amount    Decimal        @db.Decimal(10, 2)
-  provider  String?
-  providerReference String? @unique
-  checkoutUrl String?
-  paidAt    DateTime?      @db.Timestamptz(3)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id                String         @id @default(cuid())
+  bookingId         String         @unique
+  method            PaymentMethod?
+  status            PaymentStatus  @default(PENDING)
+  amount            Decimal        @db.Decimal(10, 2)
+  provider          String?
+  providerReference String?        @unique
+  checkoutUrl       String?
+  paidAt            DateTime?      @db.Timestamptz(3)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
 }
@@ -323,4 +326,20 @@ model Notification {
 
   @@index([userId, createdAt])
   @@index([bookingId, createdAt])
+}
+
+model OtpChallenge {
+  id         String    @id @default(cuid())
+  userId     String
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([email, createdAt])
 }

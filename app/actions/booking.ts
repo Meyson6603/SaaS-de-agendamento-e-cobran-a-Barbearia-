@@ -99,7 +99,7 @@ export async function createBooking(
     }),
     prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { phone: true },
+      select: { phone: true, emailOtpVerifiedAt: true },
     }),
   ]);
 
@@ -107,10 +107,14 @@ export async function createBooking(
     return { success: false, error: "Esta barbearia não foi encontrada." };
   }
 
-  if (!customer?.phone || !isValidBrazilianPhone(customer.phone)) {
+  if (
+    !customer?.phone ||
+    !isValidBrazilianPhone(customer.phone) ||
+    !customer.emailOtpVerifiedAt
+  ) {
     return {
       success: false,
-      error: "Salve um telefone válido no seu perfil antes de confirmar.",
+      error: "Verifique seu e-mail antes de confirmar o agendamento.",
     };
   }
 

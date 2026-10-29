@@ -2371,6 +2371,33 @@ a {
   margin-top: 6px;
 }
 
+.notification-list {
+  display: grid;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.notification-item > div {
+  display: grid;
+  gap: 4px;
+}
+
+.notification-item span,
+.notification-item time {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.notification-item time {
+  flex: 0 0 auto;
+}
+
 .manager-empty {
   margin: 0;
   padding: 13px 0 2px;

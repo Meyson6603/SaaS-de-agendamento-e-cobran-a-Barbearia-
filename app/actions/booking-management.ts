@@ -10,6 +10,7 @@ import {
   isBookingSlotAvailable,
 } from "@/lib/booking-availability";
 import { prisma } from "@/lib/prisma";
+import { notifyBookingParticipants } from "@/lib/notifications";
 
 export type BookingManagementState = {
   error: string | null;
@@ -78,7 +79,8 @@ export async function cancelBooking(
         where: { id: bookingId },
         select: {
           id: true, shopId: true, customerId: true, status: true,
-          startsAt: true, endsAt: true, shop: { select: { slug: true } },
+          professionalId: true, serviceNameSnapshot: true,
+          startsAt: true, endsAt: true, shop: { select: { slug: true, timezone: true } },
         },
       });
       if (!booking || !(await canAccessBooking(transaction, booking, session.user))) {
@@ -98,6 +100,17 @@ export async function cancelBooking(
           bookingId: booking.id, actorId: session.user.id, type: "CANCELLED",
           previousStartsAt: booking.startsAt, previousEndsAt: booking.endsAt,
         },
+      });
+      await notifyBookingParticipants(transaction, {
+        bookingId: booking.id,
+        shopId: booking.shopId,
+        customerId: booking.customerId,
+        professionalId: booking.professionalId,
+        serviceName: booking.serviceNameSnapshot,
+        startsAt: booking.startsAt,
+        timezone: booking.shop.timezone,
+        type: "BOOKING_CANCELLED",
+        actorId: session.user.id,
       });
       return { reason: null, slug: booking.shop.slug };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
@@ -132,7 +145,8 @@ export async function rescheduleBooking(
         select: {
           id: true, shopId: true, customerId: true, status: true,
           startsAt: true, endsAt: true, serviceId: true, professionalId: true,
-          serviceDurationSnapshot: true, shop: { select: { slug: true, timezone: true } },
+          serviceDurationSnapshot: true, serviceNameSnapshot: true,
+          shop: { select: { slug: true, timezone: true } },
         },
       });
       if (!booking || !(await canAccessBooking(transaction, booking, session.user))) {
@@ -169,6 +183,17 @@ export async function rescheduleBooking(
           previousStartsAt: booking.startsAt, previousEndsAt: booking.endsAt,
           newStartsAt, newEndsAt,
         },
+      });
+      await notifyBookingParticipants(transaction, {
+        bookingId: booking.id,
+        shopId: booking.shopId,
+        customerId: booking.customerId,
+        professionalId: booking.professionalId,
+        serviceName: booking.serviceNameSnapshot,
+        startsAt: newStartsAt,
+        timezone: booking.shop.timezone,
+        type: "BOOKING_RESCHEDULED",
+        actorId: session.user.id,
       });
       return { reason: null, slug: booking.shop.slug };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });

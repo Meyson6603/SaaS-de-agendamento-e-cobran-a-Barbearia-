@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth-session";
 import { isPlatformAdmin } from "@/lib/platform-admin";
 import { prisma } from "@/lib/prisma";
+import { notifyBookingParticipants } from "@/lib/notifications";
 
 export type PaymentManagementState = {
   error: string | null;
@@ -33,8 +34,11 @@ export async function recordInPersonPayment(
       id: true,
       shopId: true,
       professionalId: true,
+      customerId: true,
+      serviceNameSnapshot: true,
+      startsAt: true,
       status: true,
-      shop: { select: { slug: true } },
+      shop: { select: { slug: true, timezone: true } },
       payment: { select: { status: true } },
     },
   });
@@ -55,16 +59,33 @@ export async function recordInPersonPayment(
     return { error: "Um pagamento estornado não pode ser registrado novamente.", success: null };
   }
 
-  const updated = await prisma.payment.updateMany({
-    where: {
-      bookingId: booking.id,
-      status: { in: ["PENDING", "FAILED"] },
-    },
-    data: {
-      method: method as "PIX" | "CASH" | "CARD_ON_SITE",
-      status: "PAID",
-      paidAt: new Date(),
-    },
+  const updated = await prisma.$transaction(async (transaction) => {
+    const result = await transaction.payment.updateMany({
+      where: {
+        bookingId: booking.id,
+        status: { in: ["PENDING", "FAILED"] },
+      },
+      data: {
+        method: method as "PIX" | "CASH" | "CARD_ON_SITE",
+        status: "PAID",
+        paidAt: new Date(),
+      },
+    });
+    if (result.count === 1) {
+      await notifyBookingParticipants(transaction, {
+        bookingId: booking.id,
+        shopId: booking.shopId,
+        customerId: booking.customerId,
+        professionalId: booking.professionalId,
+        serviceName: booking.serviceNameSnapshot,
+        startsAt: booking.startsAt,
+        timezone: booking.shop.timezone,
+        type: "PAYMENT_RECEIVED",
+        actorId: session.user.id,
+        paymentMethod: method,
+      });
+    }
+    return result;
   });
 
   if (updated.count !== 1) {

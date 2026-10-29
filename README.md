@@ -65,6 +65,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - O proprietário, gerente ou profissional responsável pode registrar pagamentos presenciais como PIX, dinheiro ou cartão; o valor usa o snapshot do serviço no momento do agendamento.
 - Clientes, proprietários, gerentes e administradores podem cancelar ou remarcar agendamentos futuros até o início do atendimento.
 - Cancelamentos e remarcações revalidam a disponibilidade no servidor e registram eventos no histórico do agendamento.
+- O sistema registra notificações internas para confirmações, cancelamentos, remarcações e pagamentos recebidos.
 
 Regras detalhadas de cancelamento, exceções de horário, notificações e pagamentos ainda precisam ser definidas.
 

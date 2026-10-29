@@ -338,6 +338,61 @@ a {
   opacity: 0.65;
 }
 
+.booking-management-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.booking-reschedule-panel,
+.booking-cancel-confirmation {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #faf9f5;
+}
+
+.booking-reschedule-panel select {
+  min-height: 40px;
+}
+
+.booking-reschedule-times {
+  display: grid;
+  gap: 8px;
+}
+
+.booking-cancel-form {
+  display: grid;
+  gap: 8px;
+}
+
+.booking-cancel-trigger,
+.booking-cancel-back {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 10px;
+  text-decoration: underline;
+}
+
+.booking-cancel-trigger:hover,
+.booking-cancel-back:hover {
+  color: var(--accent-dark);
+}
+
+.account-record-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.account-record-cancelled {
+  opacity: 0.75;
+}
+
 .auth-switch {
   margin: 18px 0 0;
   color: var(--muted);

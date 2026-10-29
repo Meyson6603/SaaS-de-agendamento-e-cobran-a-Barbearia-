@@ -194,6 +194,8 @@ Profissionais com vínculo `PROFESSIONAL` e perfil associado podem acessar `/pro
 ```bash
 npm run dev    # inicia o servidor de desenvolvimento
 npm run lint   # verifica problemas de lint
+npm test       # executa os testes automatizados
+npm run test:watch  # executa os testes em modo observação
 npm run build  # gera a versão de produção
 npm run start  # inicia a versão de produção
 npm run db:validate  # valida o esquema Prisma

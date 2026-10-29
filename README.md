@@ -1,8 +1,27 @@
-# SaaS de agendamento e cobrança
+# Navalha — SaaS de agendamento e cobrança
 
-Aplicação web para ajudar barbearias a organizar serviços, horários, agendamentos e pagamentos em um só lugar.
+Aplicação web full-stack para barbearias organizarem serviços, horários, agendamentos, clientes e pagamentos em um só lugar.
 
-O produto será desenvolvido inicialmente para o mercado brasileiro (BRL), com foco em uma experiência confiável tanto para quem administra a barbearia quanto para quem agenda um atendimento.
+O projeto foi desenvolvido para o mercado brasileiro, com valores em BRL e foco em uma experiência confiável para gestores, profissionais e clientes.
+
+## Visão geral
+
+O Navalha conecta a página pública de agendamento aos painéis internos da barbearia. O cliente escolhe um serviço, profissional, data e horário; o servidor revalida a disponibilidade, confirma o agendamento e cria o registro de pagamento. Gestores acompanham a operação, enquanto profissionais consultam apenas a própria agenda.
+
+### Principais funcionalidades
+
+- Autenticação por e-mail/senha e Google com Better Auth.
+- Perfis de cliente, proprietário, gerente, profissional e administrador da plataforma.
+- Cadastro de barbearias, profissionais, serviços e associações de serviço.
+- Disponibilidade semanal, blocos de horários e exceções pontuais.
+- Página pública de agendamento com disponibilidade real.
+- Proteção contra reservas duplicadas com transação serializável.
+- Cancelamento e remarcação de agendamentos futuros.
+- Notificações internas para eventos de agenda e pagamentos.
+- Registro de pagamentos presenciais em PIX, dinheiro e cartão.
+- Checkout online com Mercado Pago e webhook assinado.
+- Verificação OTP por e-mail com Resend e modo local para desenvolvimento.
+- Endpoint de health check e headers HTTP de segurança.
 
 ## Problema
 
@@ -13,9 +32,27 @@ Barbearias precisam conciliar agenda, informações de serviços, clientes e pag
 - **Barbearias e profissionais:** cadastram serviços, organizam a agenda e acompanham agendamentos e pagamentos.
 - **Clientes:** consultam serviços e horários disponíveis e solicitam um agendamento.
 
-## Escopo do MVP
+## Fluxos principais
 
-A primeira versão deve validar o fluxo principal de agendamento:
+### Cliente
+
+1. Acessa a página pública da barbearia.
+2. Seleciona serviço, profissional, data e horário.
+3. Entra ou cria uma conta.
+4. Informa o telefone de contato e confirma o e-mail com OTP.
+5. Confirma o agendamento.
+6. Consulta o agendamento, cancela/remarca ou inicia o pagamento online no dashboard.
+
+### Gestão da barbearia
+
+1. O administrador da plataforma cria a barbearia e vincula o proprietário.
+2. O proprietário adiciona gerentes e profissionais verificados.
+3. A equipe cadastra serviços, associa profissionais e configura horários.
+4. O painel acompanha agenda, pagamentos, notificações e bloqueios pontuais.
+
+## Escopo implementado
+
+O MVP implementado contempla:
 
 - cadastro administrativo da barbearia e atribuição de acesso ao proprietário;
 - cadastro da barbearia, profissionais e serviços;
@@ -25,14 +62,14 @@ A primeira versão deve validar o fluxo principal de agendamento:
 - registro do método e status de pagamento;
 - experiência responsiva para celular e desktop.
 
-Os pagamentos online serão integrados depois que as regras de agendamento estiverem definidas. O MVP não deve armazenar dados de cartão: os dados de pagamento devem ser tratados pelo provedor escolhido.
+Os dados de cartão nunca são armazenados pela aplicação; o checkout é processado pelo provedor de pagamento.
 
 ## Contas e autenticação
 
-- A barbearia terá uma conta para acessar o painel e administrar sua operação.
-- O cliente precisará de uma conta para confirmar um agendamento e consultar seu histórico e próximos horários.
-- Cada profissional terá uma conta para acessar sua própria agenda e consultar os clientes e horários dos atendimentos atribuídos a ele.
-- O login com Google é a primeira opção planejada para barbearias e clientes; outros provedores poderão ser avaliados depois.
+- A barbearia usa uma conta para acessar o painel e administrar sua operação.
+- O cliente precisa de uma conta para confirmar um agendamento e consultar seu histórico e próximos horários.
+- Cada profissional usa uma conta para acessar sua própria agenda e consultar os clientes e horários dos atendimentos atribuídos a ele.
+- O login com Google está disponível para barbearias e clientes; outros provedores poderão ser avaliados depois.
 - O cadastro e o login por e-mail e senha também estão disponíveis; senhas precisam ter entre 8 e 128 caracteres e são confirmadas no cadastro.
 - O envio de e-mails de verificação e de recuperação de senha ainda não está configurado.
 - Profissionais vinculados a uma conta podem consultar em `/profissional` os próprios agendamentos confirmados e os dados de contato necessários dos clientes.
@@ -69,7 +106,7 @@ Os pagamentos online serão integrados depois que as regras de agendamento estiv
 - O checkout online usa o Mercado Pago para Pix e cartão; o pagamento é confirmado por webhook e permanece pendente até a confirmação do provedor.
 - A confirmação do primeiro agendamento exige OTP por e-mail; códigos expiram em 10 minutos e têm limite de tentativas. O envio usa Resend, com uma opção explícita de modo local para testes sem provedor.
 
-Regras detalhadas de cancelamento, exceções de horário, notificações e pagamentos ainda precisam ser definidas.
+As regras de cancelamento, exceções de horário, notificações e pagamentos estão representadas no fluxo atual e devem ser revisadas juridicamente antes de um lançamento comercial.
 
 ### Conceitos de dados previstos
 
@@ -93,7 +130,7 @@ Existem dois fluxos financeiros independentes:
 
 ### Assinatura do SaaS
 
-A hipótese atual é oferecer um período de teste gratuito antes de cobrar a barbearia por uma assinatura. Ainda está em aberto se o produto será comercializado por assinatura ou como um site/serviço vendido diretamente. Se a assinatura for mantida, a duração do teste, a exigência e o momento de cadastro do cartão ainda precisam ser definidos. Essa cobrança seria recebida pela empresa responsável pelo SaaS.
+A assinatura do SaaS permanece fora do MVP implementado. O modelo comercial, o período de teste e a cobrança recorrente ainda precisam ser definidos antes de uma versão comercial.
 
 ### Pagamento dos serviços da barbearia
 
@@ -104,7 +141,7 @@ Métodos previstos:
 - **Online:** Pix e cartão de crédito; cartão de débito poderá ser habilitado se o provedor e o fluxo escolhido oferecerem suporte adequado.
 - **Presencial:** dinheiro ou cartão na maquininha da barbearia. O sistema registra o método e o status, mas não processa o cartão presencial no MVP.
 
-**Provedor inicial a avaliar: Mercado Pago.** É a primeira opção a validar para os pagamentos brasileiros, considerando Pix e cartões. Antes de implementar, confirmar os requisitos atuais para pagamentos de terceiros, conexão da conta de cada barbearia, repasses, tarifas, reembolsos, webhooks e cobrança recorrente da assinatura. Se um único provedor não atender bem aos dois fluxos, a cobrança da assinatura e os pagamentos dos serviços poderão usar provedores diferentes.
+**Provedor integrado: Mercado Pago.** A integração atual cria o checkout para Pix e cartões, usa `external_reference` para vincular o pagamento ao agendamento e confirma o estado por webhook assinado. Repasses, tarifas, reembolsos e pagamentos em nome de terceiros devem ser confirmados com o provedor antes do lançamento.
 
 Para pagamentos online dos serviços, a direção preferida é que o dinheiro seja recebido diretamente na conta conectada da barbearia, sem retenção pela plataforma e sem comissão do SaaS. Essa possibilidade e suas condições precisam ser confirmadas com o provedor antes de virar uma decisão técnica definitiva.
 
@@ -124,6 +161,17 @@ Valores e limites abaixo são hipóteses iniciais para discussão e validação 
 
 Os planos não incluem comissão sobre os serviços. Tarifas do provedor de pagamento, quando houver, são separadas da assinatura. Os limites, preços, duração do período de teste e recursos de cada plano devem ser validados antes de implementar a cobrança recorrente.
 
+## Arquitetura
+
+- **Interface:** componentes React no App Router do Next.js.
+- **Servidor:** Server Actions para operações autenticadas e rotas de API para webhooks e health check.
+- **Autorização:** Better Auth combinado com validações de papel e vínculo à barbearia no servidor.
+- **Persistência:** PostgreSQL com Prisma ORM e migrations versionadas.
+- **Integrações:** Resend para OTP por e-mail e Mercado Pago para checkout e confirmação de pagamentos.
+- **Qualidade:** ESLint, TypeScript, Vitest e build Webpack do Next.js.
+
+As regras de negócio ficam concentradas em `app/actions` e `lib`, enquanto as páginas e componentes cuidam da composição da experiência. O webhook do Mercado Pago consulta o pagamento diretamente no provedor, atualiza o registro local de forma idempotente e dispara a notificação interna apenas uma vez.
+
 ## Tecnologias
 
 - [Next.js](https://nextjs.org/)
@@ -131,6 +179,10 @@ Os planos não incluem comissão sobre os serviços. Tarifas do provedor de paga
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [PostgreSQL](https://www.postgresql.org/) e [Prisma ORM](https://www.prisma.io/)
+- [Better Auth](https://www.better-auth.com/)
+- [Resend](https://resend.com/)
+- [Mercado Pago](https://www.mercadopago.com.br/)
+- [Vitest](https://vitest.dev/)
 
 ## Começando
 
@@ -227,10 +279,40 @@ Os testes automatizados também cobrem os estados saudável e indisponível dess
 - Manter claras para a barbearia e para o cliente as regras, os valores e o status de cada pagamento.
 - Implementar funcionalidades em etapas pequenas, com validação, testes e histórico de alterações no Git.
 
-## Status
+## Rotas principais
 
-O fluxo público de agendamento consulta serviços e disponibilidade real, exige autenticação para confirmar e grava o agendamento no PostgreSQL. A disponibilidade é revalidada na transação, e o pagamento fica pendente até ser registrado pela barbearia. O gerenciamento da equipe, serviços e horários semanais está disponível em `/gerencia`.
+| Rota | Finalidade |
+| --- | --- |
+| `/` | Lista ou redireciona para a barbearia disponível |
+| `/{slug}` | Página pública de agendamento |
+| `/dashboard` | Agenda, pagamentos e notificações do cliente |
+| `/gerencia` | Gestão da equipe, serviços, horários e operação |
+| `/profissional` | Agenda restrita do profissional |
+| `/admin` | Administração global da plataforma |
+| `/api/health` | Health check da aplicação e do banco |
+| `/api/payments/mercadopago/webhook` | Recebimento de atualizações de pagamento |
 
-Foi iniciado o modelo PostgreSQL com Prisma para contas, barbearias, profissionais, serviços, disponibilidade, agendamentos e pagamentos. O cadastro e login com e-mail e senha, o login com Google e a proteção de `/dashboard` estão implementados com Better Auth. Usuários autenticados podem atualizar o nome e telefone e consultar no painel os próprios agendamentos e pagamentos registrados. No fluxo demonstrativo, nome e e-mail são lidos da conta; o telefone brasileiro é solicitado uma vez, validado pelo formato/DDD e salvo no perfil. A confirmação do agendamento usa OTP por e-mail. A página inicial mostra o nome da conta e oferece atalhos para essas áreas. O provedor Google exige credenciais OAuth configuradas.
+## Qualidade e validação
 
-Ainda precisam ser implementados: melhorias de entrega de e-mail e integrações adicionais de pagamento. Até esses fluxos estarem configurados e haver registros cadastrados, as agendas podem estar vazias. O cancelamento não altera nem reembolsa pagamentos automaticamente.
+Os testes automatizados cobrem validação de telefone brasileiro, redirecionamentos seguros, mapeamento de status do Mercado Pago e os estados do health check. A aplicação também é validada com lint, verificação do schema Prisma e build de produção.
+
+```bash
+npm test
+npm run lint
+npm run db:validate
+npx next build --webpack
+```
+
+## Status do projeto
+
+O fluxo principal está implementado e validado localmente: o agendamento consulta disponibilidade real, exige autenticação e OTP por e-mail, grava o registro no PostgreSQL e cria o pagamento pendente. O gerenciamento da equipe, serviços, horários, cancelamentos, remarcações, notificações e pagamentos está disponível nos painéis correspondentes.
+
+Para um ambiente público, ainda é necessário configurar credenciais reais, domínio HTTPS, entrega de e-mail e contas compatíveis de teste/produção do Mercado Pago. O projeto não realiza cobrança da assinatura do SaaS e não automatiza reembolsos; essas regras dependem da definição comercial e jurídica do produto.
+
+## Próximos passos
+
+- Publicar uma instância de demonstração com domínio HTTPS.
+- Configurar contas de teste compatíveis do Mercado Pago.
+- Adicionar recuperação de senha e e-mails transacionais adicionais.
+- Definir planos, assinatura do SaaS e política de reembolso.
+- Expandir testes de integração para Server Actions e webhooks.

@@ -324,14 +324,21 @@ npx next build --webpack
 
 ## Status do projeto
 
-O fluxo principal está implementado e validado localmente: o agendamento consulta disponibilidade real, exige autenticação e OTP por e-mail, grava o registro no PostgreSQL e cria o pagamento pendente. O gerenciamento da equipe, serviços, horários, cancelamentos, remarcações, notificações e pagamentos está disponível nos painéis correspondentes.
+O MVP está implementado e validado localmente. O agendamento consulta disponibilidade real, exige autenticação e OTP por e-mail, grava o registro no PostgreSQL e cria o pagamento pendente. O gerenciamento da equipe, serviços, horários, cancelamentos, remarcações, notificações, e-mails transacionais e pagamentos está disponível nos painéis correspondentes.
 
-Para um ambiente público, ainda é necessário executar a publicação, configurar credenciais reais, domínio HTTPS, entrega de e-mail e contas compatíveis de teste/produção do Mercado Pago. O projeto não realiza cobrança da assinatura do SaaS e não automatiza reembolsos; essas regras dependem da definição comercial e jurídica do produto.
+As validações locais estão verdes: auditoria sem vulnerabilidades, 21 testes automatizados aprovados, lint, schema Prisma e build de produção aprovados. O projeto não realiza cobrança da assinatura do SaaS e não automatiza reembolsos; essas regras dependem da definição comercial e jurídica do produto.
 
-## Próximos passos
+## Checklist de publicação
 
-- Publicar uma instância de demonstração com domínio HTTPS.
-- Configurar contas de teste compatíveis do Mercado Pago.
-- Configurar outros e-mails transacionais adicionais.
-- Definir planos, assinatura do SaaS e política de reembolso.
-- Expandir testes de integração para Server Actions e webhooks.
+- [ ] Fazer o merge da branch de produção em `main`.
+- [ ] Importar o repositório na Vercel.
+- [ ] Configurar as variáveis de ambiente de produção.
+- [ ] Configurar domínio HTTPS e callbacks do Google OAuth.
+- [ ] Configurar o Resend com domínio/remetente validado.
+- [ ] Aplicar as migrations no banco de produção.
+- [ ] Configurar o webhook do Mercado Pago.
+- [ ] Validar `GET /api/health`.
+- [ ] Executar um agendamento completo no ambiente publicado.
+- [ ] Testar confirmação de e-mail, recuperação de senha, convite e pagamento.
+
+Após concluir este checklist, o projeto estará pronto para ser considerado finalizado para a primeira versão pública do MVP.

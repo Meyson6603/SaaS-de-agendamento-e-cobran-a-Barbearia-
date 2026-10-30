@@ -164,6 +164,7 @@ model ShopInvitation {
   tokenHash     String         @unique
   expiresAt     DateTime
   acceptedAt    DateTime?
+  cancelledAt   DateTime?
   createdAt     DateTime       @default(now())
 
   shop    Barbershop @relation("ShopInvitations", fields: [shopId], references: [id], onDelete: Cascade)

@@ -2619,6 +2619,44 @@ a {
   overflow-wrap: anywhere;
 }
 
+.manager-pending-invitations {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.manager-pending-invitations h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.manager-invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.manager-action-button {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--accent-dark);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.manager-action-button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.manager-action-button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .manager-team-form {
   display: grid;
   max-width: 460px;

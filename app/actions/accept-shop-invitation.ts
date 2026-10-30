@@ -35,6 +35,7 @@ export async function acceptShopInvitation(
   if (
     !invitation ||
     invitation.acceptedAt ||
+    invitation.cancelledAt ||
     invitation.expiresAt <= new Date() ||
     invitation.email.toLowerCase() !== session.user.email.toLowerCase()
   ) {

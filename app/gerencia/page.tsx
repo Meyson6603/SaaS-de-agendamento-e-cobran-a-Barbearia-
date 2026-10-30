@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import BookingSetupForms from "./booking-setup-forms";
 import ShopInvitationForm from "./shop-invitation-form";
+import InvitationActions from "./invitation-actions";
 import BookingManagementActions from "@/app/_components/booking-management-actions";
 import PaymentManagementActions from "@/app/_components/payment-management-actions";
 import { getBookingDates } from "@/lib/booking-availability";
@@ -72,6 +73,7 @@ async function ManagerDashboard({
     services,
     weeklyAvailability,
     availabilityBlocks,
+    pendingInvitations,
   } = dashboard;
   const formattedRevenue = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -220,6 +222,32 @@ async function ManagerDashboard({
             </ul>
           ) : (
             <p className="manager-empty">Nenhum gerente adicional cadastrado.</p>
+          )}
+          {pendingInvitations.length > 0 && (
+            <div className="manager-pending-invitations">
+              <h3>Convites pendentes</h3>
+              <ul className="manager-team-list">
+                {pendingInvitations.map((invitation) => (
+                  <li key={invitation.id}>
+                    <div>
+                      <span>{invitation.email}</span>
+                      <span>
+                        {invitation.role === "MANAGER"
+                          ? "Gerente"
+                          : `Profissional${invitation.displayName ? ` · ${invitation.displayName}` : ""}`}
+                      </span>
+                      <span>
+                        Expira em{" "}
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          dateStyle: "short",
+                        }).format(invitation.expiresAt)}
+                      </span>
+                    </div>
+                    <InvitationActions invitationId={invitation.id} />
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           <ShopInvitationForm shopId={selectedShop.id} />
         </section>

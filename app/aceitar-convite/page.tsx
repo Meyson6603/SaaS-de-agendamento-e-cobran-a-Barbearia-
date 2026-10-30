@@ -36,6 +36,7 @@ async function AcceptInvitationContent({
           displayName: true,
           expiresAt: true,
           acceptedAt: true,
+          cancelledAt: true,
           shop: { select: { name: true } },
         },
       })
@@ -43,6 +44,7 @@ async function AcceptInvitationContent({
   const isValid = Boolean(
     invitation &&
       !invitation.acceptedAt &&
+      !invitation.cancelledAt &&
       invitation.expiresAt > new Date(),
   );
 

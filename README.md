@@ -237,7 +237,7 @@ O painel apresenta indicadores agregados e listas de barbearias e usuários. Na 
 
 O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários podem convidar gerentes, e proprietários ou gerentes podem convidar profissionais por e-mail. Os convites expiram em sete dias e só podem ser aceitos pela conta que usa o e-mail convidado.
 
-O painel mostra indicadores, próximos atendimentos e permite consultar/adicionar gerentes, profissionais, serviços e horários semanais. Profissionais precisam ter uma conta verificada preexistente. Os horários são recorrentes, e as opções públicas são geradas em intervalos de 15 minutos para os próximos 14 dias. Proprietários, gerentes e administradores podem editar e ativar ou desativar profissionais e serviços; horários semanais podem ser editados ou removidos. Bloqueios pontuais podem ser cadastrados por profissional com data, intervalo e motivo opcional; eles impedem novas reservas que tenham conflito. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
+O painel mostra indicadores, próximos atendimentos e permite consultar/adicionar gerentes, profissionais, serviços e horários semanais. Gerentes e profissionais podem ser convidados por e-mail, e o vínculo é criado quando o convite é aceito. Os horários são recorrentes, e as opções públicas são geradas em intervalos de 15 minutos para os próximos 14 dias. Proprietários, gerentes e administradores podem editar e ativar ou desativar profissionais e serviços; horários semanais podem ser editados ou removidos. Bloqueios pontuais podem ser cadastrados por profissional com data, intervalo e motivo opcional; eles impedem novas reservas que tenham conflito. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
 
 O link público usa o identificador da barbearia, por exemplo `/{slug}`. O endereço `/` redireciona para a única barbearia cadastrada ou mostra a lista quando há várias. Ao confirmar, o sistema salva o agendamento e um registro de pagamento pendente; nenhum pagamento é processado.
 
@@ -250,9 +250,11 @@ npm run dev    # inicia o servidor de desenvolvimento
 npm run lint   # verifica problemas de lint
 npm test       # executa os testes automatizados
 npm run test:watch  # executa os testes em modo observação
+npm run audit      # verifica vulnerabilidades nas dependências
 npm run build  # gera a versão de produção
 npm run start  # inicia a versão de produção
 npm run db:validate  # valida o esquema Prisma
+npm run db:deploy    # aplica migrations em produção
 npm run db:studio    # abre a interface local do Prisma Studio
 npx auth secret      # gera um segredo para configurar em BETTER_AUTH_SECRET
 ```
@@ -264,9 +266,10 @@ Antes de publicar:
 1. Configure as variáveis de `.env.example` no ambiente de produção, usando um `BETTER_AUTH_URL` e `APP_URL` HTTPS.
 2. Use `OTP_DEV_MODE=false` e configure `RESEND_API_KEY` e `EMAIL_FROM`.
 3. Configure `MERCADOPAGO_WEBHOOK_SECRET` e registre `/api/payments/mercadopago/webhook` no provedor.
-4. Execute `npx prisma migrate deploy` no banco de produção.
-5. Valide `GET /api/health`, que retorna `200` somente quando o banco está acessível.
-6. Confirme o fluxo de login, agendamento, OTP e retorno do checkout antes de liberar o link público.
+4. Execute `npm run db:deploy` no banco de produção.
+5. Execute `npm run audit` e confirme que não há vulnerabilidades reportadas.
+6. Valide `GET /api/health`, que retorna `200` somente quando o banco está acessível.
+7. Confirme o fluxo de login, verificação de e-mail, recuperação de senha, convite, agendamento, OTP e retorno do checkout antes de liberar o link público.
 
 O endpoint de saúde não expõe credenciais nem dados da aplicação. Em caso de indisponibilidade do banco, responde `503` para que plataformas de deploy e monitores possam detectar a falha.
 

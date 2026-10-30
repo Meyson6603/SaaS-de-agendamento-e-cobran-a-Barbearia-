@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import BookingSetupForms from "./booking-setup-forms";
-import ManagerTeamForm from "./manager-team-form";
+import ShopInvitationForm from "./shop-invitation-form";
 import BookingManagementActions from "@/app/_components/booking-management-actions";
 import PaymentManagementActions from "@/app/_components/payment-management-actions";
 import { getBookingDates } from "@/lib/booking-availability";
@@ -221,7 +221,7 @@ async function ManagerDashboard({
           ) : (
             <p className="manager-empty">Nenhum gerente adicional cadastrado.</p>
           )}
-          <ManagerTeamForm shopId={selectedShop.id} />
+          <ShopInvitationForm shopId={selectedShop.id} />
         </section>
       )}
     </>

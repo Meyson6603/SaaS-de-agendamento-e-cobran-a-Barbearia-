@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import {
   addWeeklyAvailability,
   createAvailabilityBlock,
-  createProfessional,
   createShopService,
   removeAvailabilityBlock,
   removeWeeklyAvailability,
@@ -15,6 +14,10 @@ import {
   updateWeeklyAvailability,
   type BarbershopSetupState,
 } from "@/app/actions/barbershop-setup";
+import {
+  inviteShopMember,
+  type ShopInvitationState,
+} from "@/app/actions/shop-invitations";
 
 type ProfessionalOption = {
   id: string;
@@ -81,7 +84,10 @@ export default function BookingSetupForms({
   timezone: string;
 }) {
   const [professionalState, professionalAction, professionalPending] =
-    useActionState(createProfessional, initialState);
+    useActionState<ShopInvitationState, FormData>(
+      inviteShopMember,
+      { error: null, success: null },
+    );
   const [serviceState, serviceAction, servicePending] = useActionState(
     createShopService,
     initialState,
@@ -124,6 +130,7 @@ export default function BookingSetupForms({
           )}
           <form action={professionalAction} className="manager-team-form">
             <input name="shopId" type="hidden" value={shopId} />
+            <input name="role" type="hidden" value="PROFESSIONAL" />
             <div className="manager-form-field">
               <label htmlFor="professional-display-name">Nome profissional</label>
               <input
@@ -135,7 +142,7 @@ export default function BookingSetupForms({
               />
             </div>
             <div className="manager-form-field">
-              <label htmlFor="professional-email">E-mail da conta verificada</label>
+              <label htmlFor="professional-email">E-mail do profissional</label>
               <input
                 autoComplete="email"
                 id="professional-email"

@@ -13,6 +13,11 @@ enum MembershipRole {
   PROFESSIONAL
 }
 
+enum InvitationRole {
+  MANAGER
+  PROFESSIONAL
+}
+
 enum Weekday {
   SUNDAY
   MONDAY
@@ -80,6 +85,7 @@ model User {
   bookingEvents BookingEvent[] @relation("BookingEventActor")
   notifications Notification[]
   otpChallenges OtpChallenge[]
+  invitations   ShopInvitation[] @relation("InvitationInvitee")
 }
 
 model Account {
@@ -145,6 +151,26 @@ model Barbershop {
   availabilityExceptions AvailabilityException[]
   bookings               Booking[]
   notifications          Notification[]
+  invitations            ShopInvitation[] @relation("ShopInvitations")
+}
+
+model ShopInvitation {
+  id            String         @id @default(cuid())
+  shopId        String
+  inviteeId     String?
+  email         String
+  role          InvitationRole
+  displayName   String?
+  tokenHash     String         @unique
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime       @default(now())
+
+  shop    Barbershop @relation("ShopInvitations", fields: [shopId], references: [id], onDelete: Cascade)
+  invitee User?      @relation("InvitationInvitee", fields: [inviteeId], references: [id], onDelete: SetNull)
+
+  @@index([shopId, email])
+  @@index([email, acceptedAt])
 }
 
 model Membership {

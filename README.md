@@ -233,7 +233,7 @@ O painel apresenta indicadores agregados e listas de barbearias e usuários. Na 
 
 ### Painel da barbearia
 
-O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários ou administradores podem adicionar contas existentes e verificadas como `MANAGER`. Convites por e-mail ainda não estão configurados.
+O painel de gestão fica em `/gerencia` e exige uma sessão autenticada. Proprietários e gerentes veem apenas barbearias às quais estão vinculados. Administradores da plataforma podem selecionar e acompanhar todas as barbearias. O administrador cadastra a barbearia e atribui o primeiro vínculo `OWNER` a uma conta existente e verificada; proprietários podem convidar gerentes, e proprietários ou gerentes podem convidar profissionais por e-mail. Os convites expiram em sete dias e só podem ser aceitos pela conta que usa o e-mail convidado.
 
 O painel mostra indicadores, próximos atendimentos e permite consultar/adicionar gerentes, profissionais, serviços e horários semanais. Profissionais precisam ter uma conta verificada preexistente. Os horários são recorrentes, e as opções públicas são geradas em intervalos de 15 minutos para os próximos 14 dias. Proprietários, gerentes e administradores podem editar e ativar ou desativar profissionais e serviços; horários semanais podem ser editados ou removidos. Bloqueios pontuais podem ser cadastrados por profissional com data, intervalo e motivo opcional; eles impedem novas reservas que tenham conflito. Usuários sem vínculo de gestão veem uma mensagem informando que devem solicitar acesso ao administrador.
 
@@ -313,6 +313,6 @@ Para um ambiente público, ainda é necessário configurar credenciais reais, do
 
 - Publicar uma instância de demonstração com domínio HTTPS.
 - Configurar contas de teste compatíveis do Mercado Pago.
-- Configurar convites por e-mail e outros e-mails transacionais adicionais.
+- Configurar outros e-mails transacionais adicionais.
 - Definir planos, assinatura do SaaS e política de reembolso.
 - Expandir testes de integração para Server Actions e webhooks.

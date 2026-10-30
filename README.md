@@ -73,6 +73,7 @@ Os dados de cartão nunca são armazenados pela aplicação; o checkout é proce
 - O cadastro e o login por e-mail e senha também estão disponíveis; senhas precisam ter entre 8 e 128 caracteres, são confirmadas no cadastro e o e-mail precisa ser verificado.
 - A recuperação de senha envia um link por e-mail com validade de uma hora.
 - Convites pendentes de equipe podem ser reenviados ou cancelados pelos responsáveis autorizados.
+- Confirmações, cancelamentos e remarcações de agendamentos enviam e-mails ao cliente e ao profissional.
 - Profissionais vinculados a uma conta podem consultar em `/profissional` os próprios agendamentos confirmados e os dados de contato necessários dos clientes.
 - No fluxo do cliente, o login é solicitado depois da escolha do serviço e do horário, antes da confirmação.
 - O dono ou gerente administrará a barbearia e terá acesso geral ao painel; profissionais terão acesso restrito à própria agenda.

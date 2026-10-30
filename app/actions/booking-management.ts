@@ -11,6 +11,7 @@ import {
 } from "@/lib/booking-availability";
 import { prisma } from "@/lib/prisma";
 import { notifyBookingParticipants } from "@/lib/notifications";
+import { sendBookingEventEmails } from "@/lib/booking-emails";
 
 export type BookingManagementState = {
   error: string | null;
@@ -117,6 +118,7 @@ export async function cancelBooking(
 
     if (outcome.reason) return cancellationError(outcome.reason);
     revalidateBookingViews(outcome.slug);
+    await sendBookingEventEmails(bookingId, "CANCELLED");
     return { error: null, success: "Agendamento cancelado." };
   } catch (error) {
     if (isSerializationConflict(error)) {
@@ -200,6 +202,7 @@ export async function rescheduleBooking(
 
     if (outcome.reason) return rescheduleError(outcome.reason);
     revalidateBookingViews(outcome.slug);
+    await sendBookingEventEmails(bookingId, "RESCHEDULED");
     return { error: null, success: "Agendamento remarcado." };
   } catch (error) {
     if (isSerializationConflict(error)) {

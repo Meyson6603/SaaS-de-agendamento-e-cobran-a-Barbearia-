@@ -11,6 +11,7 @@ import {
 } from "@/lib/booking-availability";
 import { prisma } from "@/lib/prisma";
 import { notifyBookingParticipants } from "@/lib/notifications";
+import { sendBookingEventEmails } from "@/lib/booking-emails";
 
 export type BookingResult =
   | { success: true; bookingId: string }
@@ -231,6 +232,7 @@ export async function createBooking(
     revalidatePath("/dashboard");
     revalidatePath("/gerencia");
     revalidatePath("/profissional");
+    await sendBookingEventEmails(outcome.booking.id, "CONFIRMED");
     return { success: true, bookingId: outcome.booking.id };
   } catch (error) {
     if (

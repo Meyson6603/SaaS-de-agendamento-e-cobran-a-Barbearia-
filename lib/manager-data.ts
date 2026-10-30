@@ -56,6 +56,7 @@ export async function getManagerDashboard(shopId?: string) {
       services: [],
       weeklyAvailability: [],
       availabilityBlocks: [],
+      pendingInvitations: [],
     };
   }
 
@@ -81,6 +82,7 @@ export async function getManagerDashboard(shopId?: string) {
     configuredServices,
     weeklyAvailability,
     availabilityBlocks,
+    pendingInvitations,
   ] =
     await Promise.all([
       prisma.professional.count({
@@ -180,6 +182,25 @@ export async function getManagerDashboard(shopId?: string) {
           professional: { select: { displayName: true } },
         },
       }),
+      prisma.shopInvitation.findMany({
+        where: {
+          shopId: shop.id,
+          acceptedAt: null,
+          cancelledAt: null,
+          expiresAt: { gt: now },
+          ...(selectedMembership.role === "OWNER" || platformAdmin
+            ? {}
+            : { role: "PROFESSIONAL" }),
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          displayName: true,
+          expiresAt: true,
+        },
+      }),
     ]);
 
   return {
@@ -223,6 +244,7 @@ export async function getManagerDashboard(shopId?: string) {
     ),
     weeklyAvailability,
     availabilityBlocks,
+    pendingInvitations,
   };
 }
 

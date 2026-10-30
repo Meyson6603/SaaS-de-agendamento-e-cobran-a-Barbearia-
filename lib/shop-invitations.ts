@@ -31,6 +31,24 @@ export async function createShopInvitation(input: {
   const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
   const url = `${baseURL}/aceitar-convite?token=${token}`;
 
+  await sendInvitationEmail({
+    email: input.email,
+    shopName: input.shopName,
+    role: input.role,
+    displayName: input.displayName,
+    url,
+  });
+
+  return invitation;
+}
+
+export async function sendInvitationEmail(input: {
+  email: string;
+  shopName: string;
+  role: "MANAGER" | "PROFESSIONAL";
+  displayName?: string | null;
+  url: string;
+}) {
   await sendEmail({
     to: input.email,
     subject: `Convite para a equipe da ${input.shopName} | Navalha`,
@@ -40,13 +58,11 @@ export async function createShopInvitation(input: {
       input.role === "MANAGER"
         ? "Papel: gerente"
         : `Papel: profissional${input.displayName ? ` (${input.displayName})` : ""}`,
-      `Aceite o convite pelo link: ${url}`,
+      `Aceite o convite pelo link: ${input.url}`,
       "",
       "O convite expira em 7 dias e pode ser usado uma única vez.",
     ].join("\n"),
   });
-
-  return invitation;
 }
 
 export const invitationExpirationMs = INVITATION_TTL_MS;

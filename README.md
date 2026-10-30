@@ -296,7 +296,7 @@ Os testes automatizados também cobrem os estados saudável e indisponível dess
 
 ## Qualidade e validação
 
-Os testes automatizados cobrem validação de telefone brasileiro, redirecionamentos seguros, mapeamento de status do Mercado Pago e os estados do health check. A aplicação também é validada com lint, verificação do schema Prisma e build de produção.
+Os testes automatizados cobrem validação de telefone brasileiro, redirecionamentos seguros, mapeamento de status do Mercado Pago, estados do health check, convites de equipe e e-mails transacionais de agendamento. A aplicação também é validada com lint, verificação do schema Prisma e build de produção.
 
 ```bash
 npm test

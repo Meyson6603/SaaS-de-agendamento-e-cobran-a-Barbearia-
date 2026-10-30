@@ -275,6 +275,20 @@ O endpoint de saúde não expõe credenciais nem dados da aplicação. Em caso d
 
 Os testes automatizados também cobrem os estados saudável e indisponível desse endpoint, sem depender de uma conexão real com o banco.
 
+### Publicação da demo
+
+Para publicar na Vercel:
+
+1. Importe o repositório e selecione o projeto Next.js.
+2. Configure as variáveis de `.env.example` no ambiente de produção, sem adicionar o arquivo `.env` ao repositório.
+3. Use a URL HTTPS fornecida pela Vercel em `BETTER_AUTH_URL` e `APP_URL`.
+4. Configure no Google OAuth a callback `https://SEU_DOMINIO/api/auth/callback/google`.
+5. Configure no Mercado Pago a URL `https://SEU_DOMINIO/api/payments/mercadopago/webhook`.
+6. Execute `npm run db:deploy` uma vez contra o banco de produção antes de liberar a aplicação.
+7. Após o deploy, valide `https://SEU_DOMINIO/api/health` e faça um agendamento de ponta a ponta.
+
+O deploy não aplica migrations automaticamente para evitar alterações inesperadas no banco. A variável `OTP_DEV_MODE` deve permanecer como `false`, e as credenciais de produção devem ser cadastradas somente no painel do provedor.
+
 ## Princípios do projeto
 
 - Separar a cobrança da assinatura do SaaS dos pagamentos dos serviços.
@@ -312,7 +326,7 @@ npx next build --webpack
 
 O fluxo principal está implementado e validado localmente: o agendamento consulta disponibilidade real, exige autenticação e OTP por e-mail, grava o registro no PostgreSQL e cria o pagamento pendente. O gerenciamento da equipe, serviços, horários, cancelamentos, remarcações, notificações e pagamentos está disponível nos painéis correspondentes.
 
-Para um ambiente público, ainda é necessário configurar credenciais reais, domínio HTTPS, entrega de e-mail e contas compatíveis de teste/produção do Mercado Pago. O projeto não realiza cobrança da assinatura do SaaS e não automatiza reembolsos; essas regras dependem da definição comercial e jurídica do produto.
+Para um ambiente público, ainda é necessário executar a publicação, configurar credenciais reais, domínio HTTPS, entrega de e-mail e contas compatíveis de teste/produção do Mercado Pago. O projeto não realiza cobrança da assinatura do SaaS e não automatiza reembolsos; essas regras dependem da definição comercial e jurídica do produto.
 
 ## Próximos passos
 

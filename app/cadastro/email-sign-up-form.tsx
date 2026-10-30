@@ -47,8 +47,9 @@ export default function EmailSignUpForm({ redirectTo }: { redirectTo: string }) 
         return;
       }
 
-      router.replace(redirectTo);
-      router.refresh();
+      router.replace(
+        `/verificar-email?email=${encodeURIComponent(email)}&redirectTo=${encodeURIComponent(redirectTo)}`,
+      );
     } catch {
       setErrorMessage("Não foi possível criar a conta. Tente novamente.");
       setIsSubmitting(false);

@@ -19,8 +19,10 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    autoSignIn: false,
     minPasswordLength: 8,
     maxPasswordLength: 128,
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
@@ -32,6 +34,25 @@ export const auth = betterAuth({
           `Acesse o link para criar uma nova senha: ${url}`,
           "",
           "Esse link expira em 1 hora. Se você não solicitou a redefinição, ignore este e-mail.",
+        ].join("\n"),
+      });
+    },
+  },
+  emailVerification: {
+    expiresIn: 3600,
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Confirme seu e-mail | Navalha",
+        text: [
+          `Olá, ${user.name}!`,
+          "",
+          "Confirme seu e-mail para ativar o acesso à sua conta Navalha.",
+          `Acesse o link para confirmar: ${url}`,
+          "",
+          "Esse link expira em 1 hora.",
         ].join("\n"),
       });
     },
